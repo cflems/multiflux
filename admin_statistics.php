@@ -61,7 +61,7 @@ else
 
 
 // Get number of current visitors
-$result = $db->query('SELECT COUNT(user_id) FROM '.$db->prefix.'online WHERE idle=0') or error('Unable to fetch online count', __FILE__, __LINE__, $db->error());
+$result = $db->query('SELECT COUNT(user_id) FROM '.$db->prefix.'online WHERE idle=0 AND site_id='.SITE_ID) or error('Unable to fetch online count', __FILE__, __LINE__, $db->error());
 $num_online = $db->result($result);
 
 

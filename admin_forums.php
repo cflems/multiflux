@@ -29,7 +29,7 @@ if (isset($_POST['add_forum']))
 	if ($add_to_cat < 1)
 		message($lang_common['Bad request'], false, '404 Not Found');
 
-	$db->query('INSERT INTO '.$db->prefix.'forums (forum_name, cat_id) VALUES(\''.$db->escape($lang_admin_forums['New forum']).'\', '.$add_to_cat.')') or error('Unable to create forum', __FILE__, __LINE__, $db->error());
+	$db->query('INSERT INTO '.$db->prefix.'forums (forum_name, cat_id, site_id) VALUES(\''.$db->escape($lang_admin_forums['New forum']).'\', '.$add_to_cat.', '.SITE_ID.')') or error('Unable to create forum', __FILE__, __LINE__, $db->error());
 	$new_fid = $db->insert_id();
 
 	// Regenerate the quick jump cache
@@ -58,7 +58,7 @@ else if (isset($_GET['del_forum']))
 		prune($forum_id, 1, -1);
 
 		// Locate any "orphaned redirect topics" and delete them
-		$result = $db->query('SELECT t1.id FROM '.$db->prefix.'topics AS t1 LEFT JOIN '.$db->prefix.'topics AS t2 ON t1.moved_to=t2.id WHERE t2.id IS NULL AND t1.moved_to IS NOT NULL') or error('Unable to fetch redirect topics', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT t1.id FROM '.$db->prefix.'topics AS t1 LEFT JOIN '.$db->prefix.'topics AS t2 ON t1.moved_to=t2.id WHERE t2.id IS NULL AND t1.moved_to IS NOT NULL AND t1.site_id='.SITE_ID.' AND t2.site_id='.SITE_ID) or error('Unable to fetch redirect topics', __FILE__, __LINE__, $db->error());
 		$num_orphans = $db->num_rows($result);
 
 		if ($num_orphans)
@@ -66,15 +66,15 @@ else if (isset($_GET['del_forum']))
 			for ($i = 0; $i < $num_orphans; ++$i)
 				$orphans[] = $db->result($result, $i);
 
-			$db->query('DELETE FROM '.$db->prefix.'topics WHERE id IN('.implode(',', $orphans).')') or error('Unable to delete redirect topics', __FILE__, __LINE__, $db->error());
+			$db->query('DELETE FROM '.$db->prefix.'topics WHERE id IN('.implode(',', $orphans).') AND site_id='.SITE_ID) or error('Unable to delete redirect topics', __FILE__, __LINE__, $db->error());
 		}
 
 		// Delete the forum and any forum specific group permissions
-		$db->query('DELETE FROM '.$db->prefix.'forums WHERE id='.$forum_id) or error('Unable to delete forum', __FILE__, __LINE__, $db->error());
-		$db->query('DELETE FROM '.$db->prefix.'forum_perms WHERE forum_id='.$forum_id) or error('Unable to delete group forum permissions', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'forums WHERE id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to delete forum', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'forum_perms WHERE forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to delete group forum permissions', __FILE__, __LINE__, $db->error());
 
 		// Delete any subscriptions for this forum
-		$db->query('DELETE FROM '.$db->prefix.'forum_subscriptions WHERE forum_id='.$forum_id) or error('Unable to delete subscriptions', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'forum_subscriptions WHERE forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to delete subscriptions', __FILE__, __LINE__, $db->error());
 
 		// Regenerate the quick jump cache
 		if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
@@ -86,7 +86,7 @@ else if (isset($_GET['del_forum']))
 	}
 	else // If the user hasn't confirmed the delete
 	{
-		$result = $db->query('SELECT forum_name FROM '.$db->prefix.'forums WHERE id='.$forum_id) or error('Unable to fetch forum info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT forum_name FROM '.$db->prefix.'forums WHERE id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to fetch forum info', __FILE__, __LINE__, $db->error());
 		$forum_name = pun_htmlspecialchars($db->result($result));
 
 		$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_admin_common['Admin'], $lang_admin_common['Forums']);
@@ -132,7 +132,7 @@ else if (isset($_POST['update_positions']))
 		if ($disp_position == '' || preg_match('%[^0-9]%', $disp_position))
 			message($lang_admin_forums['Must be integer message']);
 
-		$db->query('UPDATE '.$db->prefix.'forums SET disp_position='.$disp_position.' WHERE id='.intval($forum_id)) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
+		$db->query('UPDATE '.$db->prefix.'forums SET disp_position='.$disp_position.' WHERE id='.intval($forum_id).' AND site_id='.SITE_ID) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
 	}
 
 	// Regenerate the quick jump cache
@@ -171,12 +171,12 @@ else if (isset($_GET['edit_forum']))
 		$forum_desc = ($forum_desc != '') ? '\''.$db->escape($forum_desc).'\'' : 'NULL';
 		$redirect_url = ($redirect_url != '') ? '\''.$db->escape($redirect_url).'\'' : 'NULL';
 
-		$db->query('UPDATE '.$db->prefix.'forums SET forum_name=\''.$db->escape($forum_name).'\', forum_desc='.$forum_desc.', redirect_url='.$redirect_url.', sort_by='.$sort_by.', cat_id='.$cat_id.' WHERE id='.$forum_id) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
+		$db->query('UPDATE '.$db->prefix.'forums SET forum_name=\''.$db->escape($forum_name).'\', forum_desc='.$forum_desc.', redirect_url='.$redirect_url.', sort_by='.$sort_by.', cat_id='.$cat_id.' WHERE id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
 
 		// Now let's deal with the permissions
 		if (isset($_POST['read_forum_old']))
 		{
-			$result = $db->query('SELECT g_id, g_read_board, g_post_replies, g_post_topics FROM '.$db->prefix.'groups WHERE g_id!='.PUN_ADMIN) or error('Unable to fetch user group list', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT g_id, g_read_board, g_post_replies, g_post_topics FROM '.$db->prefix.'groups WHERE g_id!='.PUN_ADMIN.' AND site_id='.SITE_ID) or error('Unable to fetch user group list', __FILE__, __LINE__, $db->error());
 			while ($cur_group = $db->fetch_assoc($result))
 			{
 				$read_forum_new = ($cur_group['g_read_board'] == '1') ? isset($_POST['read_forum_new'][$cur_group['g_id']]) ? '1' : '0' : intval($_POST['read_forum_old'][$cur_group['g_id']]);
@@ -188,13 +188,13 @@ else if (isset($_GET['edit_forum']))
 				{
 					// If the new settings are identical to the default settings for this group, delete its row in forum_perms
 					if ($read_forum_new == '1' && $post_replies_new == $cur_group['g_post_replies'] && $post_topics_new == $cur_group['g_post_topics'])
-						$db->query('DELETE FROM '.$db->prefix.'forum_perms WHERE group_id='.$cur_group['g_id'].' AND forum_id='.$forum_id) or error('Unable to delete group forum permissions', __FILE__, __LINE__, $db->error());
+						$db->query('DELETE FROM '.$db->prefix.'forum_perms WHERE group_id='.$cur_group['g_id'].' AND forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to delete group forum permissions', __FILE__, __LINE__, $db->error());
 					else
 					{
 						// Run an UPDATE and see if it affected a row, if not, INSERT
-						$db->query('UPDATE '.$db->prefix.'forum_perms SET read_forum='.$read_forum_new.', post_replies='.$post_replies_new.', post_topics='.$post_topics_new.' WHERE group_id='.$cur_group['g_id'].' AND forum_id='.$forum_id) or error('Unable to insert group forum permissions', __FILE__, __LINE__, $db->error());
+						$db->query('UPDATE '.$db->prefix.'forum_perms SET read_forum='.$read_forum_new.', post_replies='.$post_replies_new.', post_topics='.$post_topics_new.' WHERE group_id='.$cur_group['g_id'].' AND forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to insert group forum permissions', __FILE__, __LINE__, $db->error());
 						if (!$db->affected_rows())
-							$db->query('INSERT INTO '.$db->prefix.'forum_perms (group_id, forum_id, read_forum, post_replies, post_topics) VALUES('.$cur_group['g_id'].', '.$forum_id.', '.$read_forum_new.', '.$post_replies_new.', '.$post_topics_new.')') or error('Unable to insert group forum permissions', __FILE__, __LINE__, $db->error());
+							$db->query('INSERT INTO '.$db->prefix.'forum_perms (group_id, forum_id, read_forum, post_replies, post_topics, site_id) VALUES('.$cur_group['g_id'].', '.$forum_id.', '.$read_forum_new.', '.$post_replies_new.', '.$post_topics_new.', '.SITE_ID.')') or error('Unable to insert group forum permissions', __FILE__, __LINE__, $db->error());
 					}
 				}
 			}
@@ -212,7 +212,7 @@ else if (isset($_GET['edit_forum']))
 	{
 		confirm_referrer('admin_forums.php');
 
-		$db->query('DELETE FROM '.$db->prefix.'forum_perms WHERE forum_id='.$forum_id) or error('Unable to delete group forum permissions', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'forum_perms WHERE forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to delete group forum permissions', __FILE__, __LINE__, $db->error());
 
 		// Regenerate the quick jump cache
 		if (!defined('FORUM_CACHE_FUNCTIONS_LOADED'))
@@ -224,7 +224,7 @@ else if (isset($_GET['edit_forum']))
 	}
 
 	// Fetch forum info
-	$result = $db->query('SELECT id, forum_name, forum_desc, redirect_url, num_topics, sort_by, cat_id FROM '.$db->prefix.'forums WHERE id='.$forum_id) or error('Unable to fetch forum info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT id, forum_name, forum_desc, redirect_url, num_topics, sort_by, cat_id FROM '.$db->prefix.'forums WHERE id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to fetch forum info', __FILE__, __LINE__, $db->error());
 	if (!$db->num_rows($result))
 		message($lang_common['Bad request'], false, '404 Not Found');
 
@@ -261,7 +261,7 @@ else if (isset($_GET['edit_forum']))
 										<select name="cat_id" tabindex="3">
 <?php
 
-	$result = $db->query('SELECT id, cat_name FROM '.$db->prefix.'categories ORDER BY disp_position') or error('Unable to fetch category list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT id, cat_name FROM '.$db->prefix.'categories WHERE site_id='.SITE_ID.' ORDER BY disp_position') or error('Unable to fetch category list', __FILE__, __LINE__, $db->error());
 	while ($cur_cat = $db->fetch_assoc($result))
 	{
 		$selected = ($cur_cat['id'] == $cur_forum['cat_id']) ? ' selected="selected"' : '';
@@ -307,7 +307,7 @@ else if (isset($_GET['edit_forum']))
 							<tbody>
 <?php
 
-	$result = $db->query('SELECT g.g_id, g.g_title, g.g_read_board, g.g_post_replies, g.g_post_topics, fp.read_forum, fp.post_replies, fp.post_topics FROM '.$db->prefix.'groups AS g LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (g.g_id=fp.group_id AND fp.forum_id='.$forum_id.') WHERE g.g_id!='.PUN_ADMIN.' ORDER BY g.g_id') or error('Unable to fetch group forum permission list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT g.g_id, g.g_title, g.g_read_board, g.g_post_replies, g.g_post_topics, fp.read_forum, fp.post_replies, fp.post_topics FROM '.$db->prefix.'groups AS g LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (g.g_id=fp.group_id AND fp.forum_id='.$forum_id.') WHERE g.g_id!='.PUN_ADMIN.' AND g.site_id='.SITE_ID.' ORDER BY g.g_id') or error('Unable to fetch group forum permission list', __FILE__, __LINE__, $db->error());
 
 	$cur_index = 7;
 
@@ -374,7 +374,7 @@ generate_admin_menu('forums');
 			<form method="post" action="admin_forums.php?action=adddel">
 <?php
 
-$result = $db->query('SELECT id, cat_name FROM '.$db->prefix.'categories ORDER BY disp_position') or error('Unable to fetch category list', __FILE__, __LINE__, $db->error());
+$result = $db->query('SELECT id, cat_name FROM '.$db->prefix.'categories WHERE site_id='.SITE_ID.' ORDER BY disp_position') or error('Unable to fetch category list', __FILE__, __LINE__, $db->error());
 
 if ($db->num_rows($result) > 0)
 {
@@ -428,7 +428,7 @@ else
 <?php
 
 // Display all the categories and forums
-$result = $db->query('SELECT c.id AS cid, c.cat_name, f.id AS fid, f.forum_name, f.disp_position FROM '.$db->prefix.'categories AS c INNER JOIN '.$db->prefix.'forums AS f ON c.id=f.cat_id ORDER BY c.disp_position, c.id, f.disp_position') or error('Unable to fetch category/forum list', __FILE__, __LINE__, $db->error());
+$result = $db->query('SELECT c.id AS cid, c.cat_name, f.id AS fid, f.forum_name, f.disp_position FROM '.$db->prefix.'categories AS c INNER JOIN '.$db->prefix.'forums AS f ON c.id=f.cat_id WHERE c.site_id='.SITE_ID.' ORDER BY c.disp_position, c.id, f.disp_position') or error('Unable to fetch category/forum list', __FILE__, __LINE__, $db->error());
 
 if ($db->num_rows($result) > 0)
 {

@@ -41,22 +41,11 @@ if ($action == 'rebuild')
 		// This is the only potentially "dangerous" thing we can do here, so we check the referer
 		confirm_referrer('admin_maintenance.php');
 
-		$db->truncate_table('search_matches') or error('Unable to empty search index match table', __FILE__, __LINE__, $db->error());
-		$db->truncate_table('search_words') or error('Unable to empty search index words table', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'search_matches WHERE site_id='.SITE_ID) or error('Unable to empty search index match table', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'search_words WHERE site_id='.SITE_ID) or error('Unable to empty search index words table', __FILE__, __LINE__, $db->error());
 
-		// Reset the sequence for the search words (not needed for SQLite)
-		switch ($db_type)
-		{
-			case 'mysql':
-			case 'mysqli':
-			case 'mysql_innodb':
-			case 'mysqli_innodb':
-				$result = $db->query('ALTER TABLE '.$db->prefix.'search_words auto_increment=1') or error('Unable to update table auto_increment', __FILE__, __LINE__, $db->error());
-				break;
-
-			case 'pgsql';
-				$result = $db->query('SELECT setval(\''.$db->prefix.'search_words_id_seq\', 1, false)') or error('Unable to update sequence', __FILE__, __LINE__, $db->error());
-		}
+		// Removed: Reset the sequence for the search words (not needed for SQLite)
+		// We share this table so we can't mess around with the indices
 	}
 
 	$page_title = array(pun_htmlspecialchars($pun_config['o_board_title']), $lang_admin_maintenance['Rebuilding search index']);
@@ -93,7 +82,7 @@ h1 {
 	require PUN_ROOT.'include/search_idx.php';
 
 	// Fetch posts to process this cycle
-	$result = $db->query('SELECT p.id, p.message, t.subject, t.first_post_id FROM '.$db->prefix.'posts AS p INNER JOIN '.$db->prefix.'topics AS t ON t.id=p.topic_id WHERE p.id >= '.$start_at.' ORDER BY p.id ASC LIMIT '.$per_page) or error('Unable to fetch posts', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT p.id, p.message, t.subject, t.first_post_id FROM '.$db->prefix.'posts AS p INNER JOIN '.$db->prefix.'topics AS t ON t.id=p.topic_id WHERE p.id >= '.$start_at.' AND p.site_id='.SITE_ID.' ORDER BY p.id ASC LIMIT '.$per_page) or error('Unable to fetch posts', __FILE__, __LINE__, $db->error());
 
 	$end_at = 0;
 	while ($cur_item = $db->fetch_assoc($result))
@@ -111,7 +100,7 @@ h1 {
 	// Check if there is more work to do
 	if ($end_at > 0)
 	{
-		$result = $db->query('SELECT id FROM '.$db->prefix.'posts WHERE id > '.$end_at.' ORDER BY id ASC LIMIT 1') or error('Unable to fetch next ID', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT id FROM '.$db->prefix.'posts WHERE id > '.$end_at.' AND site_id='.SITE_ID.' ORDER BY id ASC LIMIT 1') or error('Unable to fetch next ID', __FILE__, __LINE__, $db->error());
 
 		if ($db->num_rows($result) > 0)
 			$query_str = '?action=rebuild&i_per_page='.$per_page.'&i_start_at='.$db->result($result);
@@ -139,7 +128,7 @@ if ($action == 'prune')
 
 		if ($prune_from == 'all')
 		{
-			$result = $db->query('SELECT id FROM '.$db->prefix.'forums') or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT id FROM '.$db->prefix.'forums WHERE site_id='.SITE_ID) or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
 			$num_forums = $db->num_rows($result);
 
 			for ($i = 0; $i < $num_forums; ++$i)
@@ -158,7 +147,7 @@ if ($action == 'prune')
 		}
 
 		// Locate any "orphaned redirect topics" and delete them
-		$result = $db->query('SELECT t1.id FROM '.$db->prefix.'topics AS t1 LEFT JOIN '.$db->prefix.'topics AS t2 ON t1.moved_to=t2.id WHERE t2.id IS NULL AND t1.moved_to IS NOT NULL') or error('Unable to fetch redirect topics', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT t1.id FROM '.$db->prefix.'topics AS t1 LEFT JOIN '.$db->prefix.'topics AS t2 ON t1.moved_to=t2.id WHERE t2.id IS NULL AND t1.moved_to IS NOT NULL AND t1.site_id='.SITE_ID.' AND t2.site_id='.SITE_ID) or error('Unable to fetch redirect topics', __FILE__, __LINE__, $db->error());
 		$num_orphans = $db->num_rows($result);
 
 		if ($num_orphans)
@@ -166,7 +155,7 @@ if ($action == 'prune')
 			for ($i = 0; $i < $num_orphans; ++$i)
 				$orphans[] = $db->result($result, $i);
 
-			$db->query('DELETE FROM '.$db->prefix.'topics WHERE id IN('.implode(',', $orphans).')') or error('Unable to delete redirect topics', __FILE__, __LINE__, $db->error());
+			$db->query('DELETE FROM '.$db->prefix.'topics WHERE id IN('.implode(',', $orphans).') AND site_id='.SITE_ID) or error('Unable to delete redirect topics', __FILE__, __LINE__, $db->error());
 		}
 
 		redirect('admin_maintenance.php', $lang_admin_maintenance['Posts pruned redirect']);
@@ -190,12 +179,13 @@ if ($action == 'prune')
 		$sql .= ' AND forum_id='.$prune_from;
 
 		// Fetch the forum name (just for cosmetic reasons)
-		$result = $db->query('SELECT forum_name FROM '.$db->prefix.'forums WHERE id='.$prune_from) or error('Unable to fetch forum name', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT forum_name FROM '.$db->prefix.'forums WHERE id='.$prune_from.' AND site_id='.SITE_ID) or error('Unable to fetch forum name', __FILE__, __LINE__, $db->error());
 		$forum = '"'.pun_htmlspecialchars($db->result($result)).'"';
 	}
 	else
 		$forum = $lang_admin_maintenance['All forums'];
 
+	$sql .= ' AND site_id='.SITE_ID;
 	$result = $db->query($sql) or error('Unable to fetch topic prune count', __FILE__, __LINE__, $db->error());
 	$num_topics = $db->result($result);
 
@@ -241,7 +231,7 @@ if ($action == 'prune')
 
 
 // Get the first post ID from the db
-$result = $db->query('SELECT id FROM '.$db->prefix.'posts ORDER BY id ASC LIMIT 1') or error('Unable to fetch topic info', __FILE__, __LINE__, $db->error());
+$result = $db->query('SELECT id FROM '.$db->prefix.'posts WHERE site_id='.SITE_ID.' ORDER BY id ASC LIMIT 1') or error('Unable to fetch topic info', __FILE__, __LINE__, $db->error());
 if ($db->num_rows($result))
 	$first_id = $db->result($result);
 
@@ -320,7 +310,7 @@ generate_admin_menu('maintenance');
 											<option value="all"><?php echo $lang_admin_maintenance['All forums'] ?></option>
 <?php
 
-	$result = $db->query('SELECT c.id AS cid, c.cat_name, f.id AS fid, f.forum_name FROM '.$db->prefix.'categories AS c INNER JOIN '.$db->prefix.'forums AS f ON c.id=f.cat_id WHERE f.redirect_url IS NULL ORDER BY c.disp_position, c.id, f.disp_position') or error('Unable to fetch category/forum list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT c.id AS cid, c.cat_name, f.id AS fid, f.forum_name FROM '.$db->prefix.'categories AS c INNER JOIN '.$db->prefix.'forums AS f ON c.id=f.cat_id WHERE f.redirect_url IS NULL AND c.site_id='.SITE_ID.' ORDER BY c.disp_position, c.id, f.disp_position') or error('Unable to fetch category/forum list', __FILE__, __LINE__, $db->error());
 
 	$cur_category = 0;
 	while ($forum = $db->fetch_assoc($result))

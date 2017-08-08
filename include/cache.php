@@ -19,7 +19,7 @@ function generate_config_cache()
 	global $db;
 
 	// Get the forum config from the DB
-	$result = $db->query('SELECT * FROM '.$db->prefix.'config', true) or error('Unable to fetch forum config', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT * FROM '.$db->prefix.'config WHERE site_id='.SITE_ID, true) or error('Unable to fetch forum config', __FILE__, __LINE__, $db->error());
 
 	$output = array();
 	while ($cur_config_item = $db->fetch_row($result))
@@ -39,7 +39,7 @@ function generate_bans_cache()
 	global $db;
 
 	// Get the ban list from the DB
-	$result = $db->query('SELECT * FROM '.$db->prefix.'bans', true) or error('Unable to fetch ban list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT * FROM '.$db->prefix.'bans WHERE site_id='.SITE_ID, true) or error('Unable to fetch ban list', __FILE__, __LINE__, $db->error());
 
 	$output = array();
 	while ($cur_ban = $db->fetch_assoc($result))
@@ -64,7 +64,7 @@ function generate_quickjump_cache($group_id = false)
 	if ($group_id !== false)
 	{
 		// Is this group even allowed to read forums?
-		$result = $db->query('SELECT g_read_board FROM '.$db->prefix.'groups WHERE g_id='.$group_id) or error('Unable to fetch user group read permission', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT g_read_board FROM '.$db->prefix.'groups WHERE g_id='.$group_id.' AND site_id='.SITE_ID) or error('Unable to fetch user group read permission', __FILE__, __LINE__, $db->error());
 		$read_board = $db->result($result);
 
 		$groups[$group_id] = $read_board;
@@ -72,7 +72,7 @@ function generate_quickjump_cache($group_id = false)
 	else
 	{
 		// A group_id was not supplied, so we generate the quick jump cache for all groups
-		$result = $db->query('SELECT g_id, g_read_board FROM '.$db->prefix.'groups') or error('Unable to fetch user group list', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT g_id, g_read_board FROM '.$db->prefix.'groups WHERE site_id='.SITE_ID) or error('Unable to fetch user group list', __FILE__, __LINE__, $db->error());
 
 		while ($row = $db->fetch_row($result))
 			$groups[$row[0]] = $row[1];
@@ -83,10 +83,10 @@ function generate_quickjump_cache($group_id = false)
 	{
 		// Output quick jump as PHP code
 		$output = '<?php'."\n\n".'if (!defined(\'PUN\')) exit;'."\n".'define(\'PUN_QJ_LOADED\', 1);'."\n".'$forum_id = isset($forum_id) ? $forum_id : 0;'."\n\n".'?>';
-
+#<?php
 		if ($read_board == '1')
 		{
-			$result = $db->query('SELECT c.id AS cid, c.cat_name, f.id AS fid, f.forum_name, f.redirect_url FROM '.$db->prefix.'categories AS c INNER JOIN '.$db->prefix.'forums AS f ON c.id=f.cat_id LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=f.id AND fp.group_id='.$group_id.') WHERE fp.read_forum IS NULL OR fp.read_forum=1 ORDER BY c.disp_position, c.id, f.disp_position') or error('Unable to fetch category/forum list', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT c.id AS cid, c.cat_name, f.id AS fid, f.forum_name, f.redirect_url FROM '.$db->prefix.'categories AS c INNER JOIN '.$db->prefix.'forums AS f ON c.id=f.cat_id LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=f.id AND fp.group_id='.$group_id.') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND fp.site_id='.SITE_ID.' ORDER BY c.disp_position, c.id, f.disp_position') or error('Unable to fetch category/forum list', __FILE__, __LINE__, $db->error());
 
 			if ($db->num_rows($result))
 			{
@@ -124,7 +124,7 @@ function generate_censoring_cache()
 {
 	global $db;
 
-	$result = $db->query('SELECT search_for, replace_with FROM '.$db->prefix.'censoring') or error('Unable to fetch censoring list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT search_for, replace_with FROM '.$db->prefix.'censoring WHERE site_id='.SITE_ID) or error('Unable to fetch censoring list', __FILE__, __LINE__, $db->error());
 	$num_words = $db->num_rows($result);
 
 	$search_for = $replace_with = array();
@@ -177,10 +177,10 @@ function generate_users_info_cache()
 
 	$stats = array();
 
-	$result = $db->query('SELECT COUNT(id)-1 FROM '.$db->prefix.'users WHERE group_id!='.PUN_UNVERIFIED) or error('Unable to fetch total user count', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(id)-1 FROM '.$db->prefix.'users WHERE group_id!='.PUN_UNVERIFIED.' AND site_id='.SITE_ID) or error('Unable to fetch total user count', __FILE__, __LINE__, $db->error());
 	$stats['total_users'] = $db->result($result);
 
-	$result = $db->query('SELECT id, username FROM '.$db->prefix.'users WHERE group_id!='.PUN_UNVERIFIED.' ORDER BY registered DESC LIMIT 1') or error('Unable to fetch newest registered user', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT id, username FROM '.$db->prefix.'users WHERE group_id!='.PUN_UNVERIFIED.' AND site_id='.SITE_ID.' ORDER BY registered DESC LIMIT 1') or error('Unable to fetch newest registered user', __FILE__, __LINE__, $db->error());
 	$stats['last_user'] = $db->fetch_assoc($result);
 
 	// Output users info as PHP code
@@ -197,7 +197,7 @@ function generate_admins_cache()
 	global $db;
 
 	// Get admins from the DB
-	$result = $db->query('SELECT id FROM '.$db->prefix.'users WHERE group_id='.PUN_ADMIN) or error('Unable to fetch users info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT id FROM '.$db->prefix.'users WHERE group_id='.PUN_ADMIN.' AND site_id='.SITE_ID) or error('Unable to fetch users info', __FILE__, __LINE__, $db->error());
 
 	$output = array();
 	while ($row = $db->fetch_row($result))

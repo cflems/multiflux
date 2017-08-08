@@ -92,7 +92,7 @@ if (isset($_POST['form_sent']))
 	// Make sure base_url doesn't end with a slash
 	if (substr($form['base_url'], -1) == '/')
 		$form['base_url'] = substr($form['base_url'], 0, -1);
-		
+
 	// Convert IDN to Punycode if needed
 	if (preg_match('/[^\x00-\x7F]/', $form['base_url']))
 	{
@@ -207,7 +207,7 @@ if (isset($_POST['form_sent']))
 			else
 				$value = 'NULL';
 
-			$db->query('UPDATE '.$db->prefix.'config SET conf_value='.$value.' WHERE conf_name=\'o_'.$db->escape($key).'\'') or error('Unable to update board config', __FILE__, __LINE__, $db->error());
+			$db->query('UPDATE '.$db->prefix.'config SET conf_value='.$value.' WHERE conf_name=\'o_'.$db->escape($key).'\' AND site_id='.SITE_ID) or error('Unable to update board config', __FILE__, __LINE__, $db->error());
 		}
 	}
 
@@ -779,7 +779,7 @@ generate_admin_menu('options');
 										<label class="conl"><input type="radio" name="form[regs_allow]" value="1"<?php if ($pun_config['o_regs_allow'] == '1') echo ' checked="checked"' ?> />&#160;<strong><?php echo $lang_admin_common['Yes'] ?></strong></label>
 										<label class="conl"><input type="radio" name="form[regs_allow]" value="0"<?php if ($pun_config['o_regs_allow'] == '0') echo ' checked="checked"' ?> />&#160;<strong><?php echo $lang_admin_common['No'] ?></strong></label>
 										<span class="clearb"><?php echo $lang_admin_options['Allow new help'] ?></span>
-									</td> 
+									</td>
 								</tr>
 								<tr>
 									<th scope="row"><?php echo $lang_admin_options['Verify label'] ?></th>

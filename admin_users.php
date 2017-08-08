@@ -28,7 +28,7 @@ if (isset($_GET['ip_stats']))
 		message($lang_common['Bad request'], false, '404 Not Found');
 
 	// Fetch ip count
-	$result = $db->query('SELECT poster_ip, MAX(posted) AS last_used FROM '.$db->prefix.'posts WHERE poster_id='.$ip_stats.' GROUP BY poster_ip') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT poster_ip, MAX(posted) AS last_used FROM '.$db->prefix.'posts WHERE poster_id='.$ip_stats.' AND site_id='.SITE_ID.' GROUP BY poster_ip') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 	$num_ips = $db->num_rows($result);
 
 	// Determine the ip offset (based on $_GET['p'])
@@ -75,7 +75,7 @@ if (isset($_GET['ip_stats']))
 			<tbody>
 <?php
 
-	$result = $db->query('SELECT poster_ip, MAX(posted) AS last_used, COUNT(id) AS used_times FROM '.$db->prefix.'posts WHERE poster_id='.$ip_stats.' GROUP BY poster_ip ORDER BY last_used DESC LIMIT '.$start_from.', 50') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT poster_ip, MAX(posted) AS last_used, COUNT(id) AS used_times FROM '.$db->prefix.'posts WHERE poster_id='.$ip_stats.' AND site_id='.SITE_ID.' GROUP BY poster_ip ORDER BY last_used DESC LIMIT '.$start_from.', 50') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 	if ($db->num_rows($result))
 	{
 		while ($cur_ip = $db->fetch_assoc($result))
@@ -129,7 +129,7 @@ if (isset($_GET['show_users']))
 		message($lang_admin_users['Bad IP message']);
 
 	// Fetch user count
-	$result = $db->query('SELECT DISTINCT poster_id, poster FROM '.$db->prefix.'posts WHERE poster_ip=\''.$db->escape($ip).'\'') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT DISTINCT poster_id, poster FROM '.$db->prefix.'posts WHERE poster_ip=\''.$db->escape($ip).'\' AND site_id='.SITE_ID) or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 	$num_users = $db->num_rows($result);
 
 	// Determine the user offset (based on $_GET['p'])
@@ -178,7 +178,7 @@ if (isset($_GET['show_users']))
 			<tbody>
 <?php
 
-	$result = $db->query('SELECT DISTINCT poster_id, poster FROM '.$db->prefix.'posts WHERE poster_ip=\''.$db->escape($ip).'\' ORDER BY poster ASC LIMIT '.$start_from.', 50') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT DISTINCT poster_id, poster FROM '.$db->prefix.'posts WHERE poster_ip=\''.$db->escape($ip).'\' AND site_id='.SITE_ID.' ORDER BY poster ASC LIMIT '.$start_from.', 50') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 	$num_posts = $db->num_rows($result);
 
 	if ($num_posts)
@@ -190,7 +190,7 @@ if (isset($_GET['show_users']))
 			$poster_ids[] = $cur_poster['poster_id'];
 		}
 
-		$result = $db->query('SELECT u.id, u.username, u.email, u.title, u.num_posts, u.admin_note, g.g_id, g.g_user_title FROM '.$db->prefix.'users AS u INNER JOIN '.$db->prefix.'groups AS g ON g.g_id=u.group_id WHERE u.id>1 AND u.id IN('.implode(',', $poster_ids).')') or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT u.id, u.username, u.email, u.title, u.num_posts, u.admin_note, g.g_id, g.g_user_title FROM '.$db->prefix.'users AS u INNER JOIN '.$db->prefix.'groups AS g ON g.g_id=u.group_id WHERE u.id>1 AND u.id IN('.implode(',', $poster_ids).') AND u.site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 
 		$user_data = array();
 		while ($cur_user = $db->fetch_assoc($result))
@@ -285,13 +285,13 @@ else if (isset($_POST['move_users']) || isset($_POST['move_users_comply']))
 		message($lang_admin_users['No users selected']);
 
 	// Are we trying to batch move any admins?
-	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND group_id='.PUN_ADMIN) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND group_id='.PUN_ADMIN.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 	if ($db->result($result) > 0)
 		message($lang_admin_users['No move admins message']);
 
 	// Fetch all user groups
 	$all_groups = array();
-	$result = $db->query('SELECT g_id, g_title FROM '.$db->prefix.'groups WHERE g_id NOT IN ('.PUN_GUEST.','.PUN_ADMIN.') ORDER BY g_title ASC') or error('Unable to fetch groups', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT g_id, g_title FROM '.$db->prefix.'groups WHERE g_id NOT IN ('.PUN_GUEST.','.PUN_ADMIN.') AND site_id='.SITE_ID.' ORDER BY g_title ASC') or error('Unable to fetch groups', __FILE__, __LINE__, $db->error());
 	while ($row = $db->fetch_row($result))
 		$all_groups[$row[0]] = $row[1];
 
@@ -300,12 +300,12 @@ else if (isset($_POST['move_users']) || isset($_POST['move_users_comply']))
 		$new_group = isset($_POST['new_group']) && isset($all_groups[$_POST['new_group']]) ? $_POST['new_group'] : message($lang_admin_users['Invalid group message']);
 
 		// Is the new group a moderator group?
-		$result = $db->query('SELECT g_moderator FROM '.$db->prefix.'groups WHERE g_id='.$new_group) or error('Unable to fetch group info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT g_moderator FROM '.$db->prefix.'groups WHERE g_id='.$new_group.' AND site_id='.SITE_ID) or error('Unable to fetch group info', __FILE__, __LINE__, $db->error());
 		$new_group_mod = $db->result($result);
 
 		// Fetch user groups
 		$user_groups = array();
-		$result = $db->query('SELECT id, group_id FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).')') or error('Unable to fetch user groups', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT id, group_id FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to fetch user groups', __FILE__, __LINE__, $db->error());
 		while ($cur_user = $db->fetch_assoc($result))
 		{
 			if (!isset($user_groups[$cur_user['group_id']]))
@@ -316,7 +316,7 @@ else if (isset($_POST['move_users']) || isset($_POST['move_users_comply']))
 
 		// Are any users moderators?
 		$group_ids = array_keys($user_groups);
-		$result = $db->query('SELECT g_id, g_moderator FROM '.$db->prefix.'groups WHERE g_id IN ('.implode(',', $group_ids).')') or error('Unable to fetch group moderators', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT g_id, g_moderator FROM '.$db->prefix.'groups WHERE g_id IN ('.implode(',', $group_ids).') AND site_id='.SITE_ID) or error('Unable to fetch group moderators', __FILE__, __LINE__, $db->error());
 		while ($cur_group = $db->fetch_assoc($result))
 		{
 			if ($cur_group['g_moderator'] == '0')
@@ -326,7 +326,7 @@ else if (isset($_POST['move_users']) || isset($_POST['move_users_comply']))
 		if (!empty($user_groups) && $new_group != PUN_ADMIN && $new_group_mod != '1')
 		{
 			// Fetch forum list and clean up their moderator list
-			$result = $db->query('SELECT id, moderators FROM '.$db->prefix.'forums') or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT id, moderators FROM '.$db->prefix.'forums WHERE site_id='.SITE_ID) or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
 			while ($cur_forum = $db->fetch_assoc($result))
 			{
 				$cur_moderators = ($cur_forum['moderators'] != '') ? unserialize($cur_forum['moderators']) : array();
@@ -335,12 +335,12 @@ else if (isset($_POST['move_users']) || isset($_POST['move_users_comply']))
 					$cur_moderators = array_diff($cur_moderators, $group_users);
 
 				$cur_moderators = (!empty($cur_moderators)) ? '\''.$db->escape(serialize($cur_moderators)).'\'' : 'NULL';
-				$db->query('UPDATE '.$db->prefix.'forums SET moderators='.$cur_moderators.' WHERE id='.$cur_forum['id']) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
+				$db->query('UPDATE '.$db->prefix.'forums SET moderators='.$cur_moderators.' WHERE id='.$cur_forum['id'].' AND site_id='.SITE_ID) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
 			}
 		}
 
 		// Change user group
-		$db->query('UPDATE '.$db->prefix.'users SET group_id='.$new_group.' WHERE id IN ('.implode(',', $user_ids).')') or error('Unable to change user group', __FILE__, __LINE__, $db->error());
+		$db->query('UPDATE '.$db->prefix.'users SET group_id='.$new_group.' WHERE id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to change user group', __FILE__, __LINE__, $db->error());
 
 		redirect('admin_users.php', $lang_admin_users['Users move redirect']);
 	}
@@ -411,7 +411,7 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 		message($lang_admin_users['No users selected']);
 
 	// Are we trying to delete any admins?
-	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND group_id='.PUN_ADMIN) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND group_id='.PUN_ADMIN.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 	if ($db->result($result) > 0)
 		message($lang_admin_users['No delete admins message']);
 
@@ -419,7 +419,7 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 	{
 		// Fetch user groups
 		$user_groups = array();
-		$result = $db->query('SELECT id, group_id FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).')') or error('Unable to fetch user groups', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT id, group_id FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to fetch user groups', __FILE__, __LINE__, $db->error());
 		while ($cur_user = $db->fetch_assoc($result))
 		{
 			if (!isset($user_groups[$cur_user['group_id']]))
@@ -430,7 +430,7 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 
 		// Are any users moderators?
 		$group_ids = array_keys($user_groups);
-		$result = $db->query('SELECT g_id, g_moderator FROM '.$db->prefix.'groups WHERE g_id IN ('.implode(',', $group_ids).')') or error('Unable to fetch group moderators', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT g_id, g_moderator FROM '.$db->prefix.'groups WHERE g_id IN ('.implode(',', $group_ids).') AND site_id='.SITE_ID) or error('Unable to fetch group moderators', __FILE__, __LINE__, $db->error());
 		while ($cur_group = $db->fetch_assoc($result))
 		{
 			if ($cur_group['g_moderator'] == '0')
@@ -438,7 +438,7 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 		}
 
 		// Fetch forum list and clean up their moderator list
-		$result = $db->query('SELECT id, moderators FROM '.$db->prefix.'forums') or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT id, moderators FROM '.$db->prefix.'forums WHERE site_id='.SITE_ID) or error('Unable to fetch forum list', __FILE__, __LINE__, $db->error());
 		while ($cur_forum = $db->fetch_assoc($result))
 		{
 			$cur_moderators = ($cur_forum['moderators'] != '') ? unserialize($cur_forum['moderators']) : array();
@@ -447,15 +447,15 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 				$cur_moderators = array_diff($cur_moderators, $group_users);
 
 			$cur_moderators = (!empty($cur_moderators)) ? '\''.$db->escape(serialize($cur_moderators)).'\'' : 'NULL';
-			$db->query('UPDATE '.$db->prefix.'forums SET moderators='.$cur_moderators.' WHERE id='.$cur_forum['id']) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
+			$db->query('UPDATE '.$db->prefix.'forums SET moderators='.$cur_moderators.' WHERE id='.$cur_forum['id'].' AND site_id='.SITE_ID) or error('Unable to update forum', __FILE__, __LINE__, $db->error());
 		}
 
 		// Delete any subscriptions
-		$db->query('DELETE FROM '.$db->prefix.'topic_subscriptions WHERE user_id IN ('.implode(',', $user_ids).')') or error('Unable to delete topic subscriptions', __FILE__, __LINE__, $db->error());
-		$db->query('DELETE FROM '.$db->prefix.'forum_subscriptions WHERE user_id IN ('.implode(',', $user_ids).')') or error('Unable to delete forum subscriptions', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'topic_subscriptions WHERE user_id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to delete topic subscriptions', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'forum_subscriptions WHERE user_id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to delete forum subscriptions', __FILE__, __LINE__, $db->error());
 
 		// Remove them from the online list (if they happen to be logged in)
-		$db->query('DELETE FROM '.$db->prefix.'online WHERE user_id IN ('.implode(',', $user_ids).')') or error('Unable to remove users from online list', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'online WHERE user_id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to remove users from online list', __FILE__, __LINE__, $db->error());
 
 		// Should we delete all posts made by these users?
 		if (isset($_POST['delete_posts']))
@@ -464,13 +464,13 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 			@set_time_limit(0);
 
 			// Find all posts made by this user
-			$result = $db->query('SELECT p.id, p.topic_id, t.forum_id FROM '.$db->prefix.'posts AS p INNER JOIN '.$db->prefix.'topics AS t ON t.id=p.topic_id INNER JOIN '.$db->prefix.'forums AS f ON f.id=t.forum_id WHERE p.poster_id IN ('.implode(',', $user_ids).')') or error('Unable to fetch posts', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT p.id, p.topic_id, t.forum_id FROM '.$db->prefix.'posts AS p INNER JOIN '.$db->prefix.'topics AS t ON t.id=p.topic_id INNER JOIN '.$db->prefix.'forums AS f ON f.id=t.forum_id WHERE p.poster_id IN ('.implode(',', $user_ids).') AND p.site_id='.SITE_ID) or error('Unable to fetch posts', __FILE__, __LINE__, $db->error());
 			if ($db->num_rows($result))
 			{
 				while ($cur_post = $db->fetch_assoc($result))
 				{
 					// Determine whether this post is the "topic post" or not
-					$result2 = $db->query('SELECT id FROM '.$db->prefix.'posts WHERE topic_id='.$cur_post['topic_id'].' ORDER BY posted LIMIT 1') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+					$result2 = $db->query('SELECT id FROM '.$db->prefix.'posts WHERE topic_id='.$cur_post['topic_id'].' AND site_id='.SITE_ID.' ORDER BY posted LIMIT 1') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 
 					if ($db->result($result2) == $cur_post['id'])
 						delete_topic($cur_post['topic_id']);
@@ -483,10 +483,10 @@ else if (isset($_POST['delete_users']) || isset($_POST['delete_users_comply']))
 		}
 		else
 			// Set all their posts to guest
-			$db->query('UPDATE '.$db->prefix.'posts SET poster_id=1 WHERE poster_id IN ('.implode(',', $user_ids).')') or error('Unable to update posts', __FILE__, __LINE__, $db->error());
+			$db->query('UPDATE '.$db->prefix.'posts SET poster_id=1 WHERE poster_id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to update posts', __FILE__, __LINE__, $db->error());
 
 		// Delete the users
-		$db->query('DELETE FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).')') or error('Unable to delete users', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to delete users', __FILE__, __LINE__, $db->error());
 
 		// Delete user avatars
 		foreach ($user_ids as $user_id)
@@ -560,12 +560,12 @@ else if (isset($_POST['ban_users']) || isset($_POST['ban_users_comply']))
 		message($lang_admin_users['No users selected']);
 
 	// Are we trying to ban any admins?
-	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND group_id='.PUN_ADMIN) or error('Unable to fetch group info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND group_id='.PUN_ADMIN.' AND site_id='.SITE_ID) or error('Unable to fetch group info', __FILE__, __LINE__, $db->error());
 	if ($db->result($result) > 0)
 		message($lang_admin_users['No ban admins message']);
 
 	// Also, we cannot ban moderators
-	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users AS u INNER JOIN '.$db->prefix.'groups AS g ON u.group_id=g.g_id WHERE g.g_moderator=1 AND u.id IN ('.implode(',', $user_ids).')') or error('Unable to fetch moderator group info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(*) FROM '.$db->prefix.'users AS u INNER JOIN '.$db->prefix.'groups AS g ON u.group_id=g.g_id WHERE g.g_moderator=1 AND u.id IN ('.implode(',', $user_ids).') AND u.site_id='.SITE_ID) or error('Unable to fetch moderator group info', __FILE__, __LINE__, $db->error());
 	if ($db->result($result) > 0)
 		message($lang_admin_users['No ban mods message']);
 
@@ -595,14 +595,14 @@ else if (isset($_POST['ban_users']) || isset($_POST['ban_users_comply']))
 
 		// Fetch user information
 		$user_info = array();
-		$result = $db->query('SELECT id, username, email, registration_ip FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).')') or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT id, username, email, registration_ip FROM '.$db->prefix.'users WHERE id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 		while ($cur_user = $db->fetch_assoc($result))
 			$user_info[$cur_user['id']] = array('username' => $cur_user['username'], 'email' => $cur_user['email'], 'ip' => $cur_user['registration_ip']);
 
 		// Overwrite the registration IP with one from the last post (if it exists)
 		if ($ban_the_ip != 0)
 		{
-			$result = $db->query('SELECT p.poster_id, p.poster_ip FROM '.$db->prefix.'posts AS p INNER JOIN (SELECT MAX(id) AS id FROM '.$db->prefix.'posts WHERE poster_id IN ('.implode(',', $user_ids).') GROUP BY poster_id) AS i ON p.id=i.id') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+			$result = $db->query('SELECT p.poster_id, p.poster_ip FROM '.$db->prefix.'posts AS p INNER JOIN (SELECT MAX(id) AS id FROM '.$db->prefix.'posts WHERE poster_id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID.' GROUP BY poster_id) AS i ON p.id=i.id') or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 			while ($cur_address = $db->fetch_assoc($result))
 				$user_info[$cur_address['poster_id']]['ip'] = $cur_address['poster_ip'];
 		}
@@ -614,7 +614,7 @@ else if (isset($_POST['ban_users']) || isset($_POST['ban_users_comply']))
 			$ban_email = '\''.$db->escape($user_info[$user_id]['email']).'\'';
 			$ban_ip = ($ban_the_ip != 0) ? '\''.$db->escape($user_info[$user_id]['ip']).'\'' : 'NULL';
 
-			$db->query('INSERT INTO '.$db->prefix.'bans (username, ip, email, message, expire, ban_creator) VALUES('.$ban_username.', '.$ban_ip.', '.$ban_email.', '.$ban_message.', '.$ban_expire.', '.$pun_user['id'].')') or error('Unable to add ban', __FILE__, __LINE__, $db->error());
+			$db->query('INSERT INTO '.$db->prefix.'bans (username, ip, email, message, expire, ban_creator, site_id) VALUES('.$ban_username.', '.$ban_ip.', '.$ban_email.', '.$ban_message.', '.$ban_expire.', '.$pun_user['id'].', '.SITE_ID.')') or error('Unable to add ban', __FILE__, __LINE__, $db->error());
 		}
 
 		// Regenerate the bans cache
@@ -796,7 +796,7 @@ else if (isset($_GET['find_user']))
 		$conditions[] = 'u.group_id='.$user_group;
 
 	// Fetch user count
-	$result = $db->query('SELECT COUNT(id) FROM '.$db->prefix.'users AS u LEFT JOIN '.$db->prefix.'groups AS g ON g.g_id=u.group_id WHERE u.id>1'.(!empty($conditions) ? ' AND '.implode(' AND ', $conditions) : '')) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(id) FROM '.$db->prefix.'users AS u LEFT JOIN '.$db->prefix.'groups AS g ON g.g_id=u.group_id WHERE u.id>1'.(!empty($conditions) ? ' AND '.implode(' AND ', $conditions) : '').' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 	$num_users = $db->result($result);
 
 	// Determine the user offset (based on $_GET['p'])
@@ -855,7 +855,7 @@ else if (isset($_GET['find_user']))
 			<tbody>
 <?php
 
-	$result = $db->query('SELECT u.id, u.username, u.email, u.title, u.num_posts, u.admin_note, g.g_id, g.g_user_title FROM '.$db->prefix.'users AS u LEFT JOIN '.$db->prefix.'groups AS g ON g.g_id=u.group_id WHERE u.id>1'.(!empty($conditions) ? ' AND '.implode(' AND ', $conditions) : '').' ORDER BY '.$db->escape($order_by).' '.$db->escape($direction).' LIMIT '.$start_from.', 50') or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT u.id, u.username, u.email, u.title, u.num_posts, u.admin_note, g.g_id, g.g_user_title FROM '.$db->prefix.'users AS u LEFT JOIN '.$db->prefix.'groups AS g ON g.g_id=u.group_id WHERE u.id>1'.(!empty($conditions) ? ' AND '.implode(' AND ', $conditions) : '').' AND u.site_id='.SITE_ID.' ORDER BY '.$db->escape($order_by).' '.$db->escape($direction).' LIMIT '.$start_from.', 50') or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 	if ($db->num_rows($result))
 	{
 		while ($user_data = $db->fetch_assoc($result))
@@ -1050,7 +1050,7 @@ else
 											<option value="0"><?php echo $lang_admin_users['Unverified users'] ?></option>
 <?php
 
-	$result = $db->query('SELECT g_id, g_title FROM '.$db->prefix.'groups WHERE g_id!='.PUN_GUEST.' ORDER BY g_title') or error('Unable to fetch user group list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT g_id, g_title FROM '.$db->prefix.'groups WHERE g_id!='.PUN_GUEST.' AND site_id='.SITE_ID.' ORDER BY g_title') or error('Unable to fetch user group list', __FILE__, __LINE__, $db->error());
 
 	while ($cur_group = $db->fetch_assoc($result))
 		echo "\t\t\t\t\t\t\t\t\t\t\t".'<option value="'.$cur_group['g_id'].'">'.pun_htmlspecialchars($cur_group['g_title']).'</option>'."\n";

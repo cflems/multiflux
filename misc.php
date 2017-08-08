@@ -53,7 +53,7 @@ else if ($action == 'markread')
 
 	check_csrf($_GET['csrf_token']);
 
-	$db->query('UPDATE '.$db->prefix.'users SET last_visit='.$pun_user['logged'].' WHERE id='.$pun_user['id']) or error('Unable to update user last visit data', __FILE__, __LINE__, $db->error());
+	$db->query('UPDATE '.$db->prefix.'users SET last_visit='.$pun_user['logged'].' WHERE id='.$pun_user['id'].' AND site_id='.SITE_ID) or error('Unable to update user last visit data', __FILE__, __LINE__, $db->error());
 
 	// Reset tracked topics
 	set_tracked_topics(null);
@@ -91,7 +91,7 @@ else if (isset($_GET['email']))
 	if ($recipient_id < 2)
 		message($lang_common['Bad request'], false, '404 Not Found');
 
-	$result = $db->query('SELECT username, email, email_setting FROM '.$db->prefix.'users WHERE id='.$recipient_id) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT username, email, email_setting FROM '.$db->prefix.'users WHERE id='.$recipient_id.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 	if (!$db->num_rows($result))
 		message($lang_common['Bad request'], false, '404 Not Found');
 
@@ -138,7 +138,7 @@ else if (isset($_GET['email']))
 
 		pun_mail($recipient_email, $mail_subject, $mail_message, $pun_user['email'], $pun_user['username']);
 
-		$db->query('UPDATE '.$db->prefix.'users SET last_email_sent='.time().' WHERE id='.$pun_user['id']) or error('Unable to update user', __FILE__, __LINE__, $db->error());
+		$db->query('UPDATE '.$db->prefix.'users SET last_email_sent='.time().' WHERE id='.$pun_user['id'].' AND site_id='.SITE_ID) or error('Unable to update user', __FILE__, __LINE__, $db->error());
 
 		// Try to determine if the data in redirect_url is valid (if not, we redirect to index.php after the email is sent)
 		$redirect_url = validate_redirect($_POST['redirect_url'], 'index.php');
@@ -204,7 +204,7 @@ else if (isset($_GET['report']))
 	{
 		// Make sure they got here from the site
 		confirm_referrer('misc.php');
-		
+
 		// Clean up reason from POST
 		$reason = pun_linebreaks(pun_trim($_POST['req_reason']));
 		if ($reason == '')
@@ -216,14 +216,14 @@ else if (isset($_GET['report']))
 			message(sprintf($lang_misc['Report flood'], $pun_user['g_report_flood'], $pun_user['g_report_flood'] - (time() - $pun_user['last_report_sent'])));
 
 		// Get the topic ID
-		$result = $db->query('SELECT topic_id FROM '.$db->prefix.'posts WHERE id='.$post_id) or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT topic_id FROM '.$db->prefix.'posts WHERE id='.$post_id.' AND site_id='.SITE_ID) or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 			message($lang_common['Bad request'], false, '404 Not Found');
 
 		$topic_id = $db->result($result);
 
 		// Get the subject and forum ID
-		$result = $db->query('SELECT subject, forum_id FROM '.$db->prefix.'topics WHERE id='.$topic_id) or error('Unable to fetch topic info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT subject, forum_id FROM '.$db->prefix.'topics WHERE id='.$topic_id.' AND site_id='.SITE_ID) or error('Unable to fetch topic info', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 			message($lang_common['Bad request'], false, '404 Not Found');
 
@@ -231,7 +231,7 @@ else if (isset($_GET['report']))
 
 		// Should we use the internal report handling?
 		if ($pun_config['o_report_method'] == '0' || $pun_config['o_report_method'] == '2')
-			$db->query('INSERT INTO '.$db->prefix.'reports (post_id, topic_id, forum_id, reported_by, created, message) VALUES('.$post_id.', '.$topic_id.', '.$forum_id.', '.$pun_user['id'].', '.time().', \''.$db->escape($reason).'\')' ) or error('Unable to create report', __FILE__, __LINE__, $db->error());
+			$db->query('INSERT INTO '.$db->prefix.'reports (post_id, topic_id, forum_id, reported_by, created, message, site_id) VALUES('.$post_id.', '.$topic_id.', '.$forum_id.', '.$pun_user['id'].', '.time().', \''.$db->escape($reason).'\', '.SITE_ID.')' ) or error('Unable to create report', __FILE__, __LINE__, $db->error());
 
 		// Should we email the report?
 		if ($pun_config['o_report_method'] == '1' || $pun_config['o_report_method'] == '2')
@@ -260,13 +260,13 @@ else if (isset($_GET['report']))
 			}
 		}
 
-		$db->query('UPDATE '.$db->prefix.'users SET last_report_sent='.time().' WHERE id='.$pun_user['id']) or error('Unable to update user', __FILE__, __LINE__, $db->error());
+		$db->query('UPDATE '.$db->prefix.'users SET last_report_sent='.time().' WHERE id='.$pun_user['id'].' AND site_id='.SITE_ID) or error('Unable to update user', __FILE__, __LINE__, $db->error());
 
 		redirect('viewforum.php?id='.$forum_id, $lang_misc['Report redirect']);
 	}
 
 	// Fetch some info about the post, the topic and the forum
-	$result = $db->query('SELECT f.id AS fid, f.forum_name, t.id AS tid, t.subject FROM '.$db->prefix.'posts AS p INNER JOIN '.$db->prefix.'topics AS t ON t.id=p.topic_id INNER JOIN '.$db->prefix.'forums AS f ON f.id=t.forum_id LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=f.id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND p.id='.$post_id) or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT f.id AS fid, f.forum_name, t.id AS tid, t.subject FROM '.$db->prefix.'posts AS p INNER JOIN '.$db->prefix.'topics AS t ON t.id=p.topic_id INNER JOIN '.$db->prefix.'forums AS f ON f.id=t.forum_id LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=f.id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND p.id='.$post_id.' AND p.site_id='.SITE_ID) or error('Unable to fetch post info', __FILE__, __LINE__, $db->error());
 	if (!$db->num_rows($result))
 		message($lang_common['Bad request'], false, '404 Not Found');
 
@@ -334,15 +334,15 @@ else if ($action == 'subscribe')
 			message($lang_common['No permission'], false, '403 Forbidden');
 
 		// Make sure the user can view the topic
-		$result = $db->query('SELECT 1 FROM '.$db->prefix.'topics AS t LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=t.forum_id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND t.id='.$topic_id.' AND t.moved_to IS NULL') or error('Unable to fetch topic info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT 1 FROM '.$db->prefix.'topics AS t LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=t.forum_id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND t.id='.$topic_id.' AND t.moved_to IS NULL AND t.site_id='.SITE_ID) or error('Unable to fetch topic info', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 			message($lang_common['Bad request'], false, '404 Not Found');
 
-		$result = $db->query('SELECT 1 FROM '.$db->prefix.'topic_subscriptions WHERE user_id='.$pun_user['id'].' AND topic_id='.$topic_id) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT 1 FROM '.$db->prefix.'topic_subscriptions WHERE user_id='.$pun_user['id'].' AND topic_id='.$topic_id.' AND site_id='.SITE_ID) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
 		if ($db->num_rows($result))
 			message($lang_misc['Already subscribed topic']);
 
-		$db->query('INSERT INTO '.$db->prefix.'topic_subscriptions (user_id, topic_id) VALUES('.$pun_user['id'].' ,'.$topic_id.')') or error('Unable to add subscription', __FILE__, __LINE__, $db->error());
+		$db->query('INSERT INTO '.$db->prefix.'topic_subscriptions (user_id, topic_id, site_id) VALUES('.$pun_user['id'].' ,'.$topic_id.' ,'.SITE_ID.')') or error('Unable to add subscription', __FILE__, __LINE__, $db->error());
 
 		redirect('viewtopic.php?id='.$topic_id, $lang_misc['Subscribe redirect']);
 	}
@@ -353,15 +353,15 @@ else if ($action == 'subscribe')
 			message($lang_common['No permission'], false, '403 Forbidden');
 
 		// Make sure the user can view the forum
-		$result = $db->query('SELECT 1 FROM '.$db->prefix.'forums AS f LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=f.id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND f.id='.$forum_id) or error('Unable to fetch forum info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT 1 FROM '.$db->prefix.'forums AS f LEFT JOIN '.$db->prefix.'forum_perms AS fp ON (fp.forum_id=f.id AND fp.group_id='.$pun_user['g_id'].') WHERE (fp.read_forum IS NULL OR fp.read_forum=1) AND f.id='.$forum_id.' AND f.site_id='.SITE_ID) or error('Unable to fetch forum info', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 			message($lang_common['Bad request'], false, '404 Not Found');
 
-		$result = $db->query('SELECT 1 FROM '.$db->prefix.'forum_subscriptions WHERE user_id='.$pun_user['id'].' AND forum_id='.$forum_id) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT 1 FROM '.$db->prefix.'forum_subscriptions WHERE user_id='.$pun_user['id'].' AND forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
 		if ($db->num_rows($result))
 			message($lang_misc['Already subscribed forum']);
 
-		$db->query('INSERT INTO '.$db->prefix.'forum_subscriptions (user_id, forum_id) VALUES('.$pun_user['id'].' ,'.$forum_id.')') or error('Unable to add subscription', __FILE__, __LINE__, $db->error());
+		$db->query('INSERT INTO '.$db->prefix.'forum_subscriptions (user_id, forum_id, site_id) VALUES('.$pun_user['id'].' ,'.$forum_id.' ,'.SITE_ID.')') or error('Unable to add subscription', __FILE__, __LINE__, $db->error());
 
 		redirect('viewforum.php?id='.$forum_id, $lang_misc['Subscribe redirect']);
 	}
@@ -385,11 +385,11 @@ else if ($action == 'unsubscribe')
 		if ($pun_config['o_topic_subscriptions'] != '1')
 			message($lang_common['No permission'], false, '403 Forbidden');
 
-		$result = $db->query('SELECT 1 FROM '.$db->prefix.'topic_subscriptions WHERE user_id='.$pun_user['id'].' AND topic_id='.$topic_id) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT 1 FROM '.$db->prefix.'topic_subscriptions WHERE user_id='.$pun_user['id'].' AND topic_id='.$topic_id.' AND site_id='.SITE_ID) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 			message($lang_misc['Not subscribed topic']);
 
-		$db->query('DELETE FROM '.$db->prefix.'topic_subscriptions WHERE user_id='.$pun_user['id'].' AND topic_id='.$topic_id) or error('Unable to remove subscription', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'topic_subscriptions WHERE user_id='.$pun_user['id'].' AND topic_id='.$topic_id.' AND site_id='.SITE_ID) or error('Unable to remove subscription', __FILE__, __LINE__, $db->error());
 
 		redirect('viewtopic.php?id='.$topic_id, $lang_misc['Unsubscribe redirect']);
 	}
@@ -399,11 +399,11 @@ else if ($action == 'unsubscribe')
 		if ($pun_config['o_forum_subscriptions'] != '1')
 			message($lang_common['No permission'], false, '403 Forbidden');
 
-		$result = $db->query('SELECT 1 FROM '.$db->prefix.'forum_subscriptions WHERE user_id='.$pun_user['id'].' AND forum_id='.$forum_id) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT 1 FROM '.$db->prefix.'forum_subscriptions WHERE user_id='.$pun_user['id'].' AND forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to fetch subscription info', __FILE__, __LINE__, $db->error());
 		if (!$db->num_rows($result))
 			message($lang_misc['Not subscribed forum']);
 
-		$db->query('DELETE FROM '.$db->prefix.'forum_subscriptions WHERE user_id='.$pun_user['id'].' AND forum_id='.$forum_id) or error('Unable to remove subscription', __FILE__, __LINE__, $db->error());
+		$db->query('DELETE FROM '.$db->prefix.'forum_subscriptions WHERE user_id='.$pun_user['id'].' AND forum_id='.$forum_id.' AND site_id='.SITE_ID) or error('Unable to remove subscription', __FILE__, __LINE__, $db->error());
 
 		redirect('viewforum.php?id='.$forum_id, $lang_misc['Unsubscribe redirect']);
 	}
