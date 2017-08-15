@@ -14,10 +14,6 @@
 if (!defined('PUN'))
 	exit;
 
-// Make SITE_ID default to 0 for initial setup
-if (!defined('SITE_ID'))
-    define('SITE_ID', 0);
-
 // Make a regex that will match CJK or Hangul characters
 define('PUN_CJK_HANGUL_REGEX', '['.
 	'\x{1100}-\x{11FF}'.		// Hangul Jamo							1100-11FF		(http://www.fileformat.info/info/unicode/block/hangul_jamo/index.htm)

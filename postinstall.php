@@ -1,6 +1,6 @@
 <?php
-define('PUN_ROOT', dirname(__FILE__).'/');
-require PUN_ROOT.'include/common.php';
+//define('PUN_ROOT', dirname(__FILE__).'/');
+//require PUN_ROOT.'include/common.php';
 
 ##########################################################
 #                       Important:                       #
@@ -11,7 +11,7 @@ require PUN_ROOT.'include/common.php';
 #                                                        #
 ##########################################################
 
-$db->query('CREATE TABLE '.$db->prefix.'hostmap ( host VARCHAR(255) NOT NULL , site_id INT(255) NOT NULL , UNIQUE (host)) ENGINE = InnoDB') or die($db->error);
+$db->query('CREATE TABLE '.$db->prefix.'hostmap ( host VARCHAR(255) NOT NULL , site_id INT(255) NOT NULL) ENGINE = InnoDB') or die(var_export($db->error(), true));
 
 $manage_tables = array(
   'bans',
@@ -22,24 +22,18 @@ $manage_tables = array(
   'forum_subscriptions',
   'forums',
   'groups',
-  'gz_akismet_queue',
-  'messages',
   'online',
-  'poll',
-  'poll_voted',
   'posts',
   'reports',
   'search_cache',
   'search_matches',
   'search_words',
-  'test_registrations',
   'topic_subscriptions',
   'topics',
   'users',
 );
 
 foreach ($manage_tables as $tbl_name) {
-  $db->query('ALTER TABLE '.$db->prefix.$tbl_name.' ADD site_id INT(255) NOT NULL DEFAULT 0') or die($db->error);
-  echo '<p>'.$tbl_name.' completed.</p>'.PHP_EOL;
+  $db->query('ALTER TABLE '.$db->prefix.$tbl_name.' ADD site_id INT(255) NOT NULL DEFAULT 0') or die(var_export($db->error(), true));
 }
 ?>

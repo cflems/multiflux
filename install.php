@@ -1641,6 +1641,7 @@ else
 
 	$db->query('INSERT INTO '.$db_prefix.'posts (poster, poster_id, poster_ip, message, posted, topic_id) VALUES(\''.$db->escape($username).'\', 2, \''.$db->escape(get_remote_address()).'\', \''.$db->escape($message).'\', '.$now.', 1)')
 		or error('Unable to insert into table '.$db_prefix.'posts. Please check your configuration and try again', __FILE__, __LINE__, $db->error());
+	require PUN_ROOT.'postinstall.php';
 
 	// Index the test post so searching for it works
 	require PUN_ROOT.'include/search_idx.php';
