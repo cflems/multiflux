@@ -272,7 +272,7 @@ function set_default_user()
 	$remote_addr = get_remote_address();
 
 	// Fetch guest user
-	$result = $db->query('SELECT u.*, g.*, o.logged, o.last_post, o.last_search FROM '.$db->prefix.'users AS u INNER JOIN '.$db->prefix.'groups AS g ON u.group_id=g.g_id LEFT JOIN '.$db->prefix.'online AS o ON o.ident=\''.$db->escape($remote_addr).'\' WHERE u.id=1') or error('Unable to fetch guest information', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT u.*, g.*, o.logged, o.last_post, o.last_search FROM '.$db->prefix.'users AS u INNER JOIN '.$db->prefix.'groups AS g ON u.group_id=g.g_id LEFT JOIN '.$db->prefix.'online AS o ON o.ident=\''.$db->escape($remote_addr).'\' WHERE u.group_id='.PUN_GUEST.' AND u.site_id='.SITE_ID) or error('Unable to fetch guest information', __FILE__, __LINE__, $db->error());
 	if (!$db->num_rows($result))
 		exit('Unable to fetch guest information. Your database must contain both a guest user and a guest user group.');
 
@@ -485,7 +485,7 @@ function check_username($username, $exclude_id = null)
 	// Check that the username (or a too similar username) is not already registered
 	$query = (!is_null($exclude_id)) ? ' AND id!='.$exclude_id : '';
 
-	$result = $db->query('SELECT username FROM '.$db->prefix.'users WHERE (UPPER(username)=UPPER(\''.$db->escape($username).'\') OR UPPER(username)=UPPER(\''.$db->escape(ucp_preg_replace('%[^\p{L}\p{N}]%u', '', $username)).'\')) AND id>1'.$query.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT username FROM '.$db->prefix.'users WHERE (UPPER(username)=UPPER(\''.$db->escape($username).'\') OR UPPER(username)=UPPER(\''.$db->escape(ucp_preg_replace('%[^\p{L}\p{N}]%u', '', $username)).'\')) AND group_id!='.PUN_GUEST.$query.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 
 	if ($db->num_rows($result))
 	{
@@ -2217,4 +2217,14 @@ function dump()
 
 	echo '</pre>';
 	exit;
+}
+
+//
+// When deleting a user, set all their posts to the appropriate guest user
+//
+function set_all_posts_to_guest($user_ids)
+{
+	global $db;
+	$result = $db->query('SELECT id FROM users WHERE group_id='.PUN_GUEST.' AND site_id='.SITE_ID) or error('Unable to fetch guest users', __FILE__, __LINE__, $db->error());
+	$db->query('UPDATE '.$db->prefix.'posts SET poster_id='.$db->result($result).' WHERE poster_id IN ('.implode(',', $user_ids).') AND site_id='.SITE_ID) or error('Unable to update posts', __FILE__, __LINE__, $db->error());
 }

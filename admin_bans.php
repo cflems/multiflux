@@ -44,7 +44,7 @@ if (isset($_REQUEST['add_ban']) || isset($_GET['edit_ban']))
 
 			if ($ban_user != '')
 			{
-				$result = $db->query('SELECT id, group_id, username, email FROM '.$db->prefix.'users WHERE username=\''.$db->escape($ban_user).'\' AND id>1 AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+				$result = $db->query('SELECT id, group_id, username, email FROM '.$db->prefix.'users WHERE username=\''.$db->escape($ban_user).'\' AND group_id!='.PUN_GUEST.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 				if ($db->num_rows($result))
 					list($user_id, $group_id, $ban_user, $ban_email) = $db->fetch_row($result);
 				else
@@ -196,7 +196,7 @@ else if (isset($_POST['add_edit_ban']))
 	// Make sure we're not banning an admin or moderator
 	if (!empty($ban_user))
 	{
-		$result = $db->query('SELECT group_id FROM '.$db->prefix.'users WHERE username=\''.$db->escape($ban_user).'\' AND id>1 AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
+		$result = $db->query('SELECT group_id FROM '.$db->prefix.'users WHERE username=\''.$db->escape($ban_user).'\' AND group_id!='.PUN_GUEST.' AND site_id='.SITE_ID) or error('Unable to fetch user info', __FILE__, __LINE__, $db->error());
 		if ($db->num_rows($result))
 		{
 			$group_id = $db->result($result);

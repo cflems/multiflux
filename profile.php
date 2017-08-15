@@ -662,6 +662,7 @@ else if (isset($_POST['delete_user']) || isset($_POST['delete_user_comply']))
 		}
 		else
 			// Set all his/her posts to guest
+			set_all_posts_to_guest(array($id));
 			$db->query('UPDATE '.$db->prefix.'posts SET poster_id=1 WHERE poster_id='.$id.' AND site_id='.SITE_ID) or error('Unable to update posts', __FILE__, __LINE__, $db->error());
 
 		// Delete the user
