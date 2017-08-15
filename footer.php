@@ -71,8 +71,8 @@ echo "\t\t\t".'<div class="conl">'."\n";
 if ($pun_config['o_quickjump'] == '1')
 {
 	// Load cached quick jump
-	if (file_exists(FORUM_CACHE_DIR.'cache_quickjump_'.$pun_user['g_id'].'.php'))
-		include FORUM_CACHE_DIR.'cache_quickjump_'.$pun_user['g_id'].'.php';
+	if (file_exists(FORUM_CACHE_DIR.'cache_quickjump_'.$pun_user['g_id'].'_'.SITE_ID.'.php'))
+		include FORUM_CACHE_DIR.'cache_quickjump_'.$pun_user['g_id'].'_'.SITE_ID.'.php';
 
 	if (!defined('PUN_QJ_LOADED'))
 	{
@@ -80,7 +80,7 @@ if ($pun_config['o_quickjump'] == '1')
 			require PUN_ROOT.'include/cache.php';
 
 		generate_quickjump_cache($pun_user['g_id']);
-		require FORUM_CACHE_DIR.'cache_quickjump_'.$pun_user['g_id'].'.php';
+		require FORUM_CACHE_DIR.'cache_quickjump_'.$pun_user['g_id'].'_'.SITE_ID.'.php';
 	}
 }
 

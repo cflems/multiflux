@@ -689,8 +689,7 @@ else
 				'datatype'		=> 'TEXT',
 				'allow_null'	=> true
 			)
-		),
-		'PRIMARY KEY'	=> array('conf_name')
+		)
 	);
 
 	$db->create_table('config', $schema) or error('Unable to create config table', __FILE__, __LINE__, $db->error());
@@ -1175,17 +1174,10 @@ else
 				'collation'		=> 'bin'
 			)
 		),
-		'PRIMARY KEY'	=> array('word'),
 		'INDEXES'		=> array(
 			'id_idx'	=> array('id')
 		)
 	);
-
-	if ($db_type == 'sqlite')
-	{
-		$schema['PRIMARY KEY'] = array('id');
-		$schema['UNIQUE KEYS'] = array('word_idx'	=> array('word'));
-	}
 
 	$db->create_table('search_words', $schema) or error('Unable to create search_words table', __FILE__, __LINE__, $db->error());
 
@@ -1504,16 +1496,10 @@ else
 			),
 		),
 		'PRIMARY KEY'	=> array('id'),
-		'UNIQUE KEYS'	=> array(
-			'username_idx'		=> array('username')
-		),
 		'INDEXES'		=> array(
 			'registered_idx'	=> array('registered')
 		)
 	);
-
-	if ($db_type == 'mysql' || $db_type == 'mysqli' || $db_type == 'mysql_innodb' || $db_type == 'mysqli_innodb')
-		$schema['UNIQUE KEYS']['username_idx'] = array('username(25)');
 
 	$db->create_table('users', $schema) or error('Unable to create users table', __FILE__, __LINE__, $db->error());
 

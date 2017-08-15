@@ -86,8 +86,8 @@ function validate_search_word($word, $idx)
 
 	if (!isset($stopwords))
 	{
-		if (file_exists(FORUM_CACHE_DIR.'cache_stopwords.php'))
-			include FORUM_CACHE_DIR.'cache_stopwords.php';
+		if (file_exists(FORUM_CACHE_DIR.'cache_stopwords_'.SITE_ID.'.php'))
+			include FORUM_CACHE_DIR.'cache_stopwords_'.SITE_ID.'.php';
 
 		if (!defined('PUN_STOPWORDS_LOADED'))
 		{
@@ -95,7 +95,7 @@ function validate_search_word($word, $idx)
 				require PUN_ROOT.'include/cache.php';
 
 			generate_stopwords_cache();
-			require FORUM_CACHE_DIR.'cache_stopwords.php';
+			require FORUM_CACHE_DIR.'cache_stopwords_'.SITE_ID.'.php';
 		}
 	}
 

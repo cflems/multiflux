@@ -105,13 +105,6 @@ if (empty($cookie_name))
 if (!defined('FORUM_CACHE_DIR'))
 	define('FORUM_CACHE_DIR', PUN_ROOT.'cache/');
 
-// Define a few commonly used constants
-define('PUN_UNVERIFIED', 0);
-define('PUN_ADMIN', 1);
-define('PUN_MOD', 2);
-define('PUN_GUEST', 3);
-define('PUN_MEMBER', 4);
-
 // Load DB abstraction layer and connect
 require PUN_ROOT.'include/dblayer/common_db.php';
 
@@ -124,8 +117,8 @@ if (!$db->num_rows($result)) define('SITE_ID', 0);
 else define('SITE_ID', $db->result($result));
 
 // Load cached config
-if (file_exists(FORUM_CACHE_DIR.'cache_config.php'))
-	include FORUM_CACHE_DIR.'cache_config.php';
+if (file_exists(FORUM_CACHE_DIR.'cache_config_'.SITE_ID.'.php'))
+	include FORUM_CACHE_DIR.'cache_config_'.SITE_ID.'.php';
 
 if (!defined('PUN_CONFIG_LOADED'))
 {
@@ -133,8 +126,27 @@ if (!defined('PUN_CONFIG_LOADED'))
 		require PUN_ROOT.'include/cache.php';
 
 	generate_config_cache();
-	require FORUM_CACHE_DIR.'cache_config.php';
+	require FORUM_CACHE_DIR.'cache_config_'.SITE_ID.'.php';
 }
+
+// Define a few commonly used constants
+define('PUN_UNVERIFIED', 0);
+if ($pun_config['o_admin_group'])
+	define('PUN_ADMIN', intval($pun_config['o_admin_group']));
+else
+	define('PUN_ADMIN', 1);
+if ($pun_config['o_mod_group'])
+	define('PUN_MOD', intval($pun_config['o_mod_group']));
+else
+	define('PUN_MOD', PUN_ADMIN+1);
+if ($pun_config['o_guest_group'])
+	define('PUN_GUEST', intval($pun_config['o_guest_group']));
+else
+	define('PUN_GUEST', PUN_MOD+1);
+if ($pun_config['o_user_group'])
+	define('PUN_MEMBER', intval($pun_config['o_user_group']));
+else
+	define('PUN_MEMBER', PUN_GUEST+1);
 
 // Verify that we are running the proper database schema revision
 if (!isset($pun_config['o_database_revision']) || $pun_config['o_database_revision'] < FORUM_DB_REVISION ||
@@ -175,8 +187,8 @@ if ($pun_config['o_maintenance'] && $pun_user['g_id'] > PUN_ADMIN && !defined('P
 	maintenance_message();
 
 // Load cached bans
-if (file_exists(FORUM_CACHE_DIR.'cache_bans.php'))
-	include FORUM_CACHE_DIR.'cache_bans.php';
+if (file_exists(FORUM_CACHE_DIR.'cache_bans_'.SITE_ID.'.php'))
+	include FORUM_CACHE_DIR.'cache_bans_'.SITE_ID.'.php';
 
 if (!defined('PUN_BANS_LOADED'))
 {
@@ -184,7 +196,7 @@ if (!defined('PUN_BANS_LOADED'))
 		require PUN_ROOT.'include/cache.php';
 
 	generate_bans_cache();
-	require FORUM_CACHE_DIR.'cache_bans.php';
+	require FORUM_CACHE_DIR.'cache_bans_'.SITE_ID.'.php';
 }
 
 // Check if current user is banned

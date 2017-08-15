@@ -514,8 +514,8 @@ else if ($action == 'stats')
 	require PUN_ROOT.'lang/'.$pun_config['o_default_lang'].'/index.php';
 
 	// Collect some statistics from the database
-	if (file_exists(FORUM_CACHE_DIR.'cache_users_info.php'))
-		include FORUM_CACHE_DIR.'cache_users_info.php';
+	if (file_exists(FORUM_CACHE_DIR.'cache_users_info_'.SITE_ID.'.php'))
+		include FORUM_CACHE_DIR.'cache_users_info_'.SITE_ID.'.php';
 
 	if (!defined('PUN_USERS_INFO_LOADED'))
 	{
@@ -523,7 +523,7 @@ else if ($action == 'stats')
 			require PUN_ROOT.'include/cache.php';
 
 		generate_users_info_cache();
-		require FORUM_CACHE_DIR.'cache_users_info.php';
+		require FORUM_CACHE_DIR.'cache_users_info_'.SITE_ID.'.php';
 	}
 
 	$result = $db->query('SELECT SUM(num_topics), SUM(num_posts) FROM '.$db->prefix.'forums WHERE site_id='.SITE_ID) or error('Unable to fetch topic/post count', __FILE__, __LINE__, $db->error());

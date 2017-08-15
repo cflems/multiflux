@@ -246,8 +246,8 @@ function get_base_url($support_https = false)
 //
 function get_admin_ids()
 {
-	if (file_exists(FORUM_CACHE_DIR.'cache_admins.php'))
-		include FORUM_CACHE_DIR.'cache_admins.php';
+	if (file_exists(FORUM_CACHE_DIR.'cache_admins_'.SITE_ID.'.php'))
+		include FORUM_CACHE_DIR.'cache_admins_'.SITE_ID.'.php';
 
 	if (!defined('PUN_ADMINS_LOADED'))
 	{
@@ -255,7 +255,7 @@ function get_admin_ids()
 			require PUN_ROOT.'include/cache.php';
 
 		generate_admins_cache();
-		require FORUM_CACHE_DIR.'cache_admins.php';
+		require FORUM_CACHE_DIR.'cache_admins_'.SITE_ID.'.php';
 	}
 
 	return $pun_admins;
@@ -820,8 +820,8 @@ function censor_words($text)
 	// If not already built in a previous call, build an array of censor words and their replacement text
 	if (!isset($search_for))
 	{
-		if (file_exists(FORUM_CACHE_DIR.'cache_censoring.php'))
-			include FORUM_CACHE_DIR.'cache_censoring.php';
+		if (file_exists(FORUM_CACHE_DIR.'cache_censoring_'.SITE_ID.'.php'))
+			include FORUM_CACHE_DIR.'cache_censoring_'.SITE_ID.'.php';
 
 		if (!defined('PUN_CENSOR_LOADED'))
 		{
@@ -829,7 +829,7 @@ function censor_words($text)
 				require PUN_ROOT.'include/cache.php';
 
 			generate_censoring_cache();
-			require FORUM_CACHE_DIR.'cache_censoring.php';
+			require FORUM_CACHE_DIR.'cache_censoring_'.SITE_ID.'.php';
 		}
 	}
 
