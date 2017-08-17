@@ -4,6 +4,8 @@ $db_opts = array(
   'host' => 'localhost',
   'user' => 'root',
   'pass' => '',
-  'name' => 'multiflux'
+  'name' => 'multiflux',
+  'prefix' => 'prefix_',
 );
+$subdom_super = '.example.com';
 ?>
