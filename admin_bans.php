@@ -283,6 +283,7 @@ else if (isset($_POST['add_edit_ban']))
         // When editing, we also need to exclude the current ban
 		if ($_POST['mode'] == 'edit')
 		    $dup_conditions[] = 'id != '.intval($_POST['ban_id']);
+				$dup_conditions[] = 'site_id = '.SITE_ID;
 
         $result = $db->query('SELECT email FROM '.$db->prefix.'bans WHERE '.implode(' AND ', $dup_conditions)) or error('Unable to check for duplicate bans', __FILE__, __LINE__, $db->error());
         if ($match = $db->result($result))
@@ -403,8 +404,9 @@ else if (isset($_GET['find_ban']))
 		}
 	}
 
+	$conditions[] = 'site_id='.SITE_ID;
 	// Fetch ban count
-	$result = $db->query('SELECT COUNT(id) FROM '.$db->prefix.'bans as b WHERE b.id>0'.(!empty($conditions) ? ' AND '.implode(' AND ', $conditions) : '').' AND site_id='.SITE_ID) or error('Unable to fetch ban list', __FILE__, __LINE__, $db->error());
+	$result = $db->query('SELECT COUNT(id) FROM '.$db->prefix.'bans as b WHERE b.id>0 AND '.implode(' AND ', $conditions)) or error('Unable to fetch ban list', __FILE__, __LINE__, $db->error());
 	$num_bans = $db->result($result);
 
 	// Determine the ban offset (based on $_GET['p'])
