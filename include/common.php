@@ -130,6 +130,13 @@ if (!defined('PUN_CONFIG_LOADED'))
 	require FORUM_CACHE_DIR.'cache_config_'.SITE_ID.'.php';
 }
 
+// Database has not been configured for this site yet
+if (!isset($pun_config['o_database_revision'])
+{
+	header('Location: setup.php');
+	exit;
+}
+
 // Define a few commonly used constants
 define('PUN_UNVERIFIED', 0);
 if ($pun_config['o_admin_group'])
@@ -150,13 +157,12 @@ else
 	define('PUN_MEMBER', PUN_GUEST+1);
 
 // Verify that we are running the proper database schema revision
-if (!isset($pun_config['o_database_revision']) || $pun_config['o_database_revision'] < FORUM_DB_REVISION ||
+if ($pun_config['o_database_revision'] < FORUM_DB_REVISION ||
 	!isset($pun_config['o_searchindex_revision']) || $pun_config['o_searchindex_revision'] < FORUM_SI_REVISION ||
 	!isset($pun_config['o_parser_revision']) || $pun_config['o_parser_revision'] < FORUM_PARSER_REVISION ||
 	version_compare($pun_config['o_cur_version'], FORUM_VERSION, '<'))
 {
-	header('Location: setup.php');
-	exit;
+	error('Your current database schema is severely out of date and will have trouble supporting MultiFlux. Please seek professional or developer assistance');
 }
 
 // Enable output buffering
