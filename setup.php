@@ -406,12 +406,14 @@ else
 	$ADMIN_GROUP = $db->insert_id();
 
 	$db->query('INSERT INTO '.$db->prefix.'groups (g_title, g_user_title, g_moderator, g_mod_edit_users, g_mod_rename_users, g_mod_change_passwords, g_mod_ban_users, g_mod_promote_users, g_read_board, g_view_users, g_post_replies, g_post_topics, g_edit_posts, g_delete_posts, g_delete_topics, g_set_title, g_search, g_search_users, g_send_email, g_post_flood, g_search_flood, g_email_flood, g_report_flood, site_id) VALUES(\''.$db->escape($lang_install['Moderators']).'\', \''.$db->escape($lang_install['Moderator']).'\', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, '.SITE_ID.')') or error('Unable to add group', __FILE__, __LINE__, $db->error());
+	$MOD_GROUP = $db->insert_id();
 
 
 	$db->query('INSERT INTO '.$db->prefix.'groups (g_title, g_user_title, g_moderator, g_mod_edit_users, g_mod_rename_users, g_mod_change_passwords, g_mod_ban_users, g_read_board, g_view_users, g_post_replies, g_post_topics, g_edit_posts, g_delete_posts, g_delete_topics, g_set_title, g_search, g_search_users, g_send_email, g_post_flood, g_search_flood, g_email_flood, g_report_flood, site_id) VALUES(\''.$db->escape($lang_install['Guests']).'\', NULL, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 60, 30, 0, 0, '.SITE_ID.')') or error('Unable to add group', __FILE__, __LINE__, $db->error());
 	$GUEST_GROUP = $db->insert_id();
 
 	$db->query('INSERT INTO '.$db->prefix.'groups (g_title, g_user_title, g_moderator, g_mod_edit_users, g_mod_rename_users, g_mod_change_passwords, g_mod_ban_users, g_read_board, g_view_users, g_post_replies, g_post_topics, g_edit_posts, g_delete_posts, g_delete_topics, g_set_title, g_search, g_search_users, g_send_email, g_post_flood, g_search_flood, g_email_flood, g_report_flood, site_id) VALUES(\''.$db->escape($lang_install['Members']).'\', NULL, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 60, 30, 60, 60, '.SITE_ID.')') or error('Unable to add group', __FILE__, __LINE__, $db->error());
+	$USER_GROUP = $db->insert_id();
 
 
 	// Insert guest and first admin user
@@ -491,6 +493,10 @@ else
 		'o_default_dst'				=> 0,
 		'o_feed_type'				=> 2,
 		'o_feed_ttl'				=> 0,
+		'o_admin_group'				=> $ADMIN_GROUP,
+		'o_mod_group'				=> $MOD_GROUP,
+		'o_guest_group'				=> $GUEST_GROUP,
+		'o_user_group'				=> $USER_GROUP,
 		'p_message_bbcode'			=> 1,
 		'p_message_img_tag'			=> 1,
 		'p_message_all_caps'		=> 1,
