@@ -155,7 +155,7 @@ if (!isset($pun_config['o_database_revision']) || $pun_config['o_database_revisi
 	!isset($pun_config['o_parser_revision']) || $pun_config['o_parser_revision'] < FORUM_PARSER_REVISION ||
 	version_compare($pun_config['o_cur_version'], FORUM_VERSION, '<'))
 {
-	header('Location: db_update.php');
+	header('Location: setup.php');
 	exit;
 }
 
