@@ -9,7 +9,7 @@ function set_siteid_from_hostname ()
 
   $result = $db->query('SELECT site_id FROM '.$db->prefix.'hostmap WHERE host = \''.$db->escape(strtolower($_SERVER['HTTP_HOST'])).'\'') or error('Unable to fetch site ID', __FILE__, __LINE__, $db->error());
 
-  if (!$db->num_rows($result)) die('No valid forum was found at this address.'); // TODO: lang-ify
+  if (!$db->num_rows($result)) error('No valid forum was found at this address.'); // TODO: lang-ify
   else define('SITE_ID', $db->result($result));
 }
 ?>

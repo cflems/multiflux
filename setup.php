@@ -78,6 +78,45 @@ if (!defined('FORUM_CACHE_DIR'))
 if (!function_exists('version_compare') || version_compare(PHP_VERSION, MIN_PHP_VERSION, '<'))
 	exit(sprintf($lang_install['You are running error'], 'PHP', PHP_VERSION, FORUM_VERSION, MIN_PHP_VERSION));
 
+// Load the appropriate DB layer class
+switch ($db_type)
+{
+	case 'mysql':
+		require PUN_ROOT.'include/dblayer/mysql.php';
+		break;
+
+	case 'mysql_innodb':
+		require PUN_ROOT.'include/dblayer/mysql_innodb.php';
+		break;
+
+	case 'mysqli':
+		require PUN_ROOT.'include/dblayer/mysqli.php';
+		break;
+
+	case 'mysqli_innodb':
+		require PUN_ROOT.'include/dblayer/mysqli_innodb.php';
+		break;
+
+	case 'pgsql':
+		require PUN_ROOT.'include/dblayer/pgsql.php';
+		break;
+
+	case 'sqlite':
+		require PUN_ROOT.'include/dblayer/sqlite.php';
+		break;
+
+	default:
+		error(sprintf($lang_install['DB type not valid'], $db_type));
+}
+
+// Create the database object (and connect/select db)
+$db = new DBLayer($db_host, $db_username, $db_password, $db_name, $db_prefix, $p_connect);
+
+// Make sure the site we are installing is actually valid
+$db->start_transaction();
+require PUN_ROOT.'include/site_id.php';
+set_siteid_from_hostname();
+$db->end_transaction();
 
 if (!isset($_POST['form_sent']))
 {
@@ -111,6 +150,9 @@ else
 	// Make sure base_url doesn't end with a slash
 	if (substr($base_url, -1) == '/')
 		$base_url = substr($base_url, 0, -1);
+
+	if (parse_url($base_url, PHP_URL_HOST) != $_SERVER['HTTP_HOST'])
+		error('The site you are trying to configure is not the one you are accessing the installer from. Please correct this discrepancy.'); // TODO: lang-ify
 
 	// Validate username and passwords
 	if (pun_strlen($username) < 2)
@@ -218,7 +260,7 @@ function process_form(the_form)
 <?php if (count($languages) > 1): ?><div class="blockform">
 	<h2><span><?php echo $lang_install['Choose install language'] ?></span></h2>
 	<div class="box">
-		<form id="install" method="post" action="install.php">
+		<form id="install" method="post" action="setup.php">
 			<div class="inform">
 				<fieldset>
 					<legend><?php echo $lang_install['Install language'] ?></legend>
@@ -251,7 +293,7 @@ function process_form(the_form)
 <div class="blockform">
 	<h2><span><?php echo sprintf($lang_install['Install'], FORUM_VERSION) ?></span></h2>
 	<div class="box">
-		<form id="install" method="post" action="install.php" onsubmit="this.start.disabled=true;if(process_form(this)){return true;}else{this.start.disabled=false;return false;}">
+		<form id="install" method="post" action="setup.php" onsubmit="this.start.disabled=true;if(process_form(this)){return true;}else{this.start.disabled=false;return false;}">
 		<div><input type="hidden" name="form_sent" value="1" /><input type="hidden" name="install_lang" value="<?php echo pun_htmlspecialchars($install_lang) ?>" /></div>
 			<div class="inform">
 <?php if (!empty($alerts)): ?>				<div class="forminfo error-info">
@@ -349,43 +391,6 @@ foreach ($alerts as $cur_alert)
 }
 else
 {
-	// Load the appropriate DB layer class
-	switch ($db_type)
-	{
-		case 'mysql':
-			require PUN_ROOT.'include/dblayer/mysql.php';
-			break;
-
-		case 'mysql_innodb':
-			require PUN_ROOT.'include/dblayer/mysql_innodb.php';
-			break;
-
-		case 'mysqli':
-			require PUN_ROOT.'include/dblayer/mysqli.php';
-			break;
-
-		case 'mysqli_innodb':
-			require PUN_ROOT.'include/dblayer/mysqli_innodb.php';
-			break;
-
-		case 'pgsql':
-			require PUN_ROOT.'include/dblayer/pgsql.php';
-			break;
-
-		case 'sqlite':
-			require PUN_ROOT.'include/dblayer/sqlite.php';
-			break;
-
-		default:
-			error(sprintf($lang_install['DB type not valid'], $db_type));
-	}
-
-	// Create the database object (and connect/select db)
-	$db = new DBLayer($db_host, $db_username, $db_password, $db_name, $db_prefix, $p_connect);
-
-	require PUN_ROOT.'include/site_id.php';
-	set_siteid_from_hostname();
-
 	// Make sure FluxBB isn't already installed
 	$result = $db->query('SELECT 1 FROM '.$db_prefix.'users WHERE site_id='.SITE_ID);
 	if ($db->num_rows($result))
