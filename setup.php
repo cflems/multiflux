@@ -520,9 +520,6 @@ else
 	// Test content has been removed due to a preposterous number of hardcoded IDs
 	// Also, it always annoys me having to delete those as an admin anyway
 
-	// TODO: why is this needed? what is generating an empty cache before form submission?
-	generate_config_cache();
-
 	$db->end_transaction();
 
 

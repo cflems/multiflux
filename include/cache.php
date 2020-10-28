@@ -21,6 +21,13 @@ function generate_config_cache()
 	// Get the forum config from the DB
 	$result = $db->query('SELECT * FROM '.$db->prefix.'config WHERE site_id='.SITE_ID, true) or error('Unable to fetch forum config', __FILE__, __LINE__, $db->error());
 
+	// Database has not been configured for this site yet
+	if (!$db->num_rows($result))
+	{
+		header('Location: setup.php');
+		exit;
+	}
+
 	$output = array();
 	while ($cur_config_item = $db->fetch_row($result))
 		$output[$cur_config_item[0]] = $cur_config_item[1];
