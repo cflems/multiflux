@@ -216,7 +216,7 @@ if (!isset($_POST['form_sent']) || !empty($alerts))
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php echo $lang_install['FluxBB Installation'] ?></title>
+<title><?php echo $lang_install['FluxBB Setup'] ?></title>
 <link rel="stylesheet" type="text/css" href="style/<?php echo pun_htmlspecialchars($default_style) ?>.css" />
 <script type="text/javascript">
 /* <![CDATA[ */
@@ -257,23 +257,23 @@ function process_form(the_form)
 <div id="brdheader" class="block">
 	<div class="box">
 		<div id="brdtitle" class="inbox">
-			<h1><span><?php echo $lang_install['FluxBB Installation'] ?></span></h1>
-			<div id="brddesc"><p><?php echo $lang_install['Welcome'] ?></p></div>
+			<h1><span><?php echo $lang_install['FluxBB Setup'] ?></span></h1>
+			<div id="brddesc"><p><?php echo $lang_install['Welcome Setup'] ?></p></div>
 		</div>
 	</div>
 </div>
 
 <div id="brdmain">
 <?php if (count($languages) > 1): ?><div class="blockform">
-	<h2><span><?php echo $lang_install['Choose install language'] ?></span></h2>
+	<h2><span><?php echo $lang_install['Choose forum language'] ?></span></h2>
 	<div class="box">
 		<form id="install" method="post" action="setup.php">
 			<div class="inform">
 				<fieldset>
-					<legend><?php echo $lang_install['Install language'] ?></legend>
+					<legend><?php echo $lang_install['Forum language'] ?></legend>
 					<div class="infldset">
-						<p><?php echo $lang_install['Choose install language info'] ?></p>
-						<label><strong><?php echo $lang_install['Install language'] ?></strong>
+						<p><?php echo $lang_install['Choose forum language info'] ?></p>
+						<label><strong><?php echo $lang_install['Forum language'] ?></strong>
 						<br /><select name="install_lang">
 <?php
 
@@ -298,7 +298,7 @@ function process_form(the_form)
 <?php endif; ?>
 
 <div class="blockform">
-	<h2><span><?php echo sprintf($lang_install['Install'], FORUM_VERSION) ?></span></h2>
+	<h2><span><?php echo sprintf($lang_install['Set Up'], FORUM_VERSION) ?></span></h2>
 	<div class="box">
 		<form id="install" method="post" action="setup.php" onsubmit="this.start.disabled=true;if(process_form(this)){return true;}else{this.start.disabled=false;return false;}">
 		<div><input type="hidden" name="form_sent" value="1" /><input type="hidden" name="install_lang" value="<?php echo pun_htmlspecialchars($install_lang) ?>" /></div>
@@ -381,7 +381,7 @@ foreach ($alerts as $cur_alert)
 					</div>
 				</fieldset>
 			</div>
-			<p class="buttons"><input type="submit" name="start" value="<?php echo $lang_install['Start install'] ?>" /></p>
+			<p class="buttons"><input type="submit" name="start" value="<?php echo $lang_install['Start setup'] ?>" /></p>
 		</form>
 	</div>
 </div>
@@ -535,7 +535,7 @@ else
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title><?php echo $lang_install['FluxBB Installation'] ?></title>
+<title><?php echo $lang_install['FluxBB Setup'] ?></title>
 <link rel="stylesheet" type="text/css" href="style/<?php echo pun_htmlspecialchars($default_style) ?>.css" />
 </head>
 <body>
@@ -547,8 +547,8 @@ else
 <div id="brdheader" class="block">
 	<div class="box">
 		<div id="brdtitle" class="inbox">
-			<h1><span><?php echo $lang_install['FluxBB Installation'] ?></span></h1>
-			<div id="brddesc"><p><?php echo $lang_install['FluxBB has been installed'] ?></p></div>
+			<h1><span><?php echo $lang_install['FluxBB Setup'] ?></span></h1>
+			<div id="brddesc"><p><?php echo $lang_install['FluxBB has been set up'] ?></p></div>
 		</div>
 	</div>
 </div>
