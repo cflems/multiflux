@@ -116,7 +116,7 @@ $db->start_transaction();
 
 // Determine SITE_ID from $_SERVER['HTTP_HOST']
 $result = $db->query('SELECT site_id FROM '.$db->prefix.'hostmap WHERE host = \''.$db->escape(strtolower($_SERVER['HTTP_HOST'])).'\'') or error('Unable to fetch site ID', __FILE__, __LINE__, $db->error());
-if (!$db->num_rows($result)) message('No forum was found at this address.');
+if (!$db->num_rows($result)) die('No forum was found at this address.');
 else define('SITE_ID', $db->result($result));
 
 // Load cached config
