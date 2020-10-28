@@ -1,17 +1,16 @@
 <?php
-//define('PUN_ROOT', dirname(__FILE__).'/');
-//require PUN_ROOT.'include/common.php';
+// Make sure no one attempts to run this script "directly"
+if (!defined('PUN'))
+	exit;
 
 ##########################################################
 #                       Important:                       #
 #                                                        #
 #  No effort has been made to port this to anything but  #
 #  MySQL using InnoDB. If you are using a different DB   #
-# system, you'll have to change the queries accordingly. #
+#  system you'll have to change the queries accordingly. #
 #                                                        #
 ##########################################################
-
-$db->query('CREATE TABLE '.$db->prefix.'hostmap ( host VARCHAR(255) NOT NULL , site_id INT(255) NOT NULL) ENGINE = InnoDB') or die(var_export($db->error(), true));
 
 $manage_tables = array(
   'bans',

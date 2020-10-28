@@ -589,6 +589,20 @@ else
 
 	// Create all tables
 	$schema = array(
+			'host'			=> array(
+				'datatype'		=> 'TEXT',
+				'allow_null'	=> false
+			),
+			'group_id'			=> array(
+				'datatype'		=> 'INT(255) UNSIGNED',
+				'allow_null'	=> false
+			),
+		)
+	);
+
+	$db->create_table('hostmap', $schema) or error('Unable to create hostmap table', __FILE__, __LINE__, $db->error());
+
+	$schema = array(
 		'FIELDS'		=> array(
 			'id'			=> array(
 				'datatype'		=> 'SERIAL',
@@ -1505,6 +1519,10 @@ else
 
 
 	$now = time();
+	$base_host = parse_url($base_url)['host'];
+
+	// Insert the default URL host mapping to the default installation point
+	$db->query('INSERT INTO '.$db->prefix.'hostmap (host, site_id) VALUES (\''.$db->escape($base_host).'\', 0)') or error('Unable to add host to map', __FILE__, __LINE__, $db->error());
 
 	// Insert the four preset groups
 	$db->query('INSERT INTO '.$db->prefix.'groups ('.($db_type != 'pgsql' ? 'g_id, ' : '').'g_title, g_user_title, g_moderator, g_mod_edit_users, g_mod_rename_users, g_mod_change_passwords, g_mod_ban_users, g_read_board, g_view_users, g_post_replies, g_post_topics, g_edit_posts, g_delete_posts, g_delete_topics, g_set_title, g_search, g_search_users, g_send_email, g_post_flood, g_search_flood, g_email_flood, g_report_flood) VALUES('.($db_type != 'pgsql' ? '1, ' : '').'\''.$db->escape($lang_install['Administrators']).'\', \''.$db->escape($lang_install['Administrator']).'\', 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0)') or error('Unable to add group', __FILE__, __LINE__, $db->error());
@@ -1627,7 +1645,7 @@ else
 
 	$db->query('INSERT INTO '.$db_prefix.'posts (poster, poster_id, poster_ip, message, posted, topic_id) VALUES(\''.$db->escape($username).'\', 2, \''.$db->escape(get_remote_address()).'\', \''.$db->escape($message).'\', '.$now.', 1)')
 		or error('Unable to insert into table '.$db_prefix.'posts. Please check your configuration and try again', __FILE__, __LINE__, $db->error());
-	require PUN_ROOT.'postinstall.php';
+	require PUN_ROOT.'include/postinstall.php';
 
 	// Index the test post so searching for it works
 	require PUN_ROOT.'include/search_idx.php';
