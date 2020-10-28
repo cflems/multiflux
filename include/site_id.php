@@ -3,14 +3,28 @@
 if (!defined('PUN'))
 	exit;
 
+
 function set_siteid_from_hostname ()
 {
-  global $db;
+  global $db, $lang_multisite, $pun_user;
 
-  $result = $db->query('SELECT site_id FROM '.$db->prefix.'hostmap WHERE host = \''.$db->escape(strtolower($_SERVER['HTTP_HOST'])).'\'') or cant_get_siteid('Unable to fetch site ID', __FILE__, __LINE__, $db->error());
+	if (!isset($lang_multisite))
+	{
+		if (isset($pun_user['language']) && file_exists(PUN_ROOT.'lang/'.$pun_user['language'].'/multisite.php'))
+			require PUN_ROOT.'lang/'.$pun_user['language'].'/multisite.php';
+		else
+			require PUN_ROOT.'lang/English'.'/multisite.php';
+	}
 
-  if (!$db->num_rows($result)) error('No valid forum was found at this address'); // TODO: lang-ify
-  else define('SITE_ID', $db->result($result));
+  $result = $db->query('SELECT site_id FROM '.$db->prefix.'hostmap WHERE host = \''.$db->escape(strtolower($_SERVER['HTTP_HOST'])).'\'') or cant_get_siteid($lang_multisite['Unable to fetch site ID error'], __FILE__, __LINE__, $db->error());
+
+  if (!$db->num_rows($result))
+	{
+		header('HTTP/1.1 404 Not Found');
+		error($lang_multisite['No such forum error']);
+	}
+  else
+		define('SITE_ID', $db->result($result));
 }
 
 // If the site ID can't be fetched, then initial database setup may be needed

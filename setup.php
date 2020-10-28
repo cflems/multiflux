@@ -112,14 +112,21 @@ switch ($db_type)
 // Create the database object (and connect/select db)
 $db = new DBLayer($db_host, $db_username, $db_password, $db_name, $db_prefix, $p_connect);
 
-// Make sure the site we are installing is actually valid
+// Make sure the site we are setting up is actually valid
 $db->start_transaction();
 require PUN_ROOT.'include/site_id.php';
 set_siteid_from_hostname();
-$db->end_transaction();
+
+// Make sure FluxBB isn't already set up
+$result = $db->query('SELECT 1 FROM '.$db_prefix.'users WHERE site_id='.SITE_ID);
+if ($db->num_rows($result))
+	error(sprintf($lang_install['Already configured error'], $db_prefix, $db_name));
+
 
 if (!isset($_POST['form_sent']))
 {
+	$db->end_transaction();
+
 	// Make an educated guess regarding base_url
 	$base_url  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://';	// protocol
 	$base_url .= preg_replace('%:(80|443)$%', '', $_SERVER['HTTP_HOST']);							// host[:port]
@@ -152,7 +159,7 @@ else
 		$base_url = substr($base_url, 0, -1);
 
 	if (parse_url($base_url, PHP_URL_HOST) != $_SERVER['HTTP_HOST'])
-		error('The site you are trying to configure is not the one you are accessing the installer from. Please correct this discrepancy'); // TODO: lang-ify
+		error($lang_install['Host mismatch error']);
 
 	// Validate username and passwords
 	if (pun_strlen($username) < 2)
@@ -391,13 +398,6 @@ foreach ($alerts as $cur_alert)
 }
 else
 {
-	// Make sure FluxBB isn't already installed
-	$result = $db->query('SELECT 1 FROM '.$db_prefix.'users WHERE site_id='.SITE_ID);
-	if ($db->num_rows($result))
-		error(sprintf($lang_install['Existing table error'], $db_prefix, $db_name));
-
-	// Start a transaction
-	$db->start_transaction();
 	$now = time();
 
 

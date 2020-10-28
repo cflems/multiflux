@@ -97,5 +97,7 @@ $lang_install = array(
 'Download config.php file'		=>	'Download config.php file',
 'FluxBB fully installed'		=>	'FluxBB&apos;s database structure has been installed. The next step is to <a href="setup.php">set up your first forum</a>.',
 'FluxBB successfully set up'  =>  'FluxBB has been successfully set up! You may now <a href="index.php">go to the forum index</a>.',
+'Host mismatch error'         =>  'The site you are trying to configure is not the one you are accessing the installer from. Please correct this discrepancy',
+'Already configured error'    =>  'This site has already been configured. Please return to the <a href="index.php">forum index</a>.',
 
 );
