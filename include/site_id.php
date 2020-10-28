@@ -17,7 +17,10 @@ function set_siteid_from_hostname ()
 function cant_get_siteid ($message, $file = null, $line = null, $db_error = false)
 {
 	if (basename($_SERVER['PHP_SELF']) != 'install.php')
+	{
 		header('Location: install.php');
+		exit;
+	}
 
 	error($message, $file, $line, $db_error);
 }
