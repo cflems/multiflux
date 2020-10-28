@@ -131,7 +131,7 @@ if (!defined('PUN_CONFIG_LOADED'))
 }
 
 // Database has not been configured for this site yet
-if (!isset($pun_config['o_database_revision'])
+if (!isset($pun_config['o_database_revision']))
 {
 	header('Location: setup.php');
 	exit;
