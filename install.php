@@ -589,6 +589,7 @@ else
 
 	// Create all tables
 	$schema = array(
+		'FIELDS'		=> array(
 			'host'			=> array(
 				'datatype'		=> 'TEXT',
 				'allow_null'	=> false
