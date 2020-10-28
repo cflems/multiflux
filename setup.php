@@ -555,7 +555,7 @@ else
 		<div class="fakeform">
 			<div class="inform">
 				<div class="forminfo">
-					<p><?php echo $lang_install['FluxBB fully installed'] ?></p>
+					<p><?php echo $lang_install['FluxBB successfully set up'] ?></p>
 				</div>
 			</div>
 		</div>

@@ -8,7 +8,7 @@ $lang_install = array(
 'Choose install language info'	=>	'The language used for this install script. The default language used for the board itself can be set below.',
 'Install language'				=>	'Install language',
 'Change language'				=>	'Change language',
-'Already installed'				=>	'It seems like FluxBB is already installed. You should go <a href="index.php">here</a> instead.',
+'Already installed'				=>	'It seems like FluxBB is already installed. You should go <a href="setup.php">here</a> instead.',
 'You are running error'			=>	'You are running %1$s version %2$s. FluxBB %3$s requires at least %1$s %4$s to run properly. You must upgrade your %1$s installation before you can continue.',
 'My FluxBB Forum'				=>	'My FluxBB Forum',
 'Description'					=>	'Unfortunately no one can be told what FluxBB is - you have to see it for yourself.',
@@ -93,8 +93,9 @@ $lang_install = array(
 'FluxBB has been installed'		=>	'FluxBB has been installed. To finalize the installation please follow the instructions below.',
 'Final instructions'			=>	'Final instructions',
 'Info 17'						=>	'To finalize the installation, you need to click on the button below to download a file called config.php. You then need to upload this file to the root directory of your FluxBB installation.',
-'Info 18'						=>	'Once you have uploaded config.php, FluxBB will be fully installed! At that point, you may <a href="index.php">go to the forum index</a>.',
+'Info 18'						=>	'Once you have uploaded config.php, FluxBB will be fully installed! At that point, you may <a href="setup.php">set up your first forum</a>.',
 'Download config.php file'		=>	'Download config.php file',
-'FluxBB fully installed'		=>	'FluxBB has been fully installed! You may now <a href="index.php">go to the forum index</a>.',
+'FluxBB fully installed'		=>	'FluxBB&apos;s database structure has been installed. The next step is to <a href="setup.php">set up your first forum</a>.',
+'FluxBB successfully set up'  =>  'FluxBB has been successfully set up! You may now <a href="index.php">go to the forum index</a>.',
 
 );
