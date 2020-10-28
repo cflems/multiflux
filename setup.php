@@ -152,7 +152,7 @@ else
 		$base_url = substr($base_url, 0, -1);
 
 	if (parse_url($base_url, PHP_URL_HOST) != $_SERVER['HTTP_HOST'])
-		error('The site you are trying to configure is not the one you are accessing the installer from. Please correct this discrepancy.'); // TODO: lang-ify
+		error('The site you are trying to configure is not the one you are accessing the installer from. Please correct this discrepancy'); // TODO: lang-ify
 
 	// Validate username and passwords
 	if (pun_strlen($username) < 2)
