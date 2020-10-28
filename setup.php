@@ -420,7 +420,7 @@ else
 	$db->query('INSERT INTO '.$db_prefix.'users (group_id, username, password, email, site_id) VALUES('.$GUEST_GROUP.', \''.$db->escape($lang_install['Guest']).'\', \''.$db->escape($lang_install['Guest']).'\', \''.$db->escape($lang_install['Guest']).'\', '.SITE_ID.')')
 		or error('Unable to add guest user. Please check your configuration and try again', __FILE__, __LINE__, $db->error());
 
-	$db->query('INSERT INTO '.$db_prefix.'users (group_id, username, password, email, language, style, num_posts, last_post, registered, registration_ip, last_visit, site_id) VALUES('.$ADMIN_GROUP.', \''.$db->escape($username).'\', \''.pun_hash($password1).'\', \''.$email.'\', \''.$db->escape($default_lang).'\', \''.$db->escape($default_style).'\', 1, '.$now.', '.$now.', \''.$db->escape(get_remote_address()).'\', '.$now.', '.SITE_ID.')')
+	$db->query('INSERT INTO '.$db_prefix.'users (group_id, username, password, email, language, style, registered, registration_ip, last_visit, site_id) VALUES('.$ADMIN_GROUP.', \''.$db->escape($username).'\', \''.pun_hash($password1).'\', \''.$email.'\', \''.$db->escape($default_lang).'\', \''.$db->escape($default_style).'\', '.$now.', \''.$db->escape(get_remote_address()).'\', '.$now.', '.SITE_ID.')')
 		or error('Unable to add administrator user. Please check your configuration and try again', __FILE__, __LINE__, $db->error());
 
 	// Enable/disable avatars depending on file_uploads setting in PHP configuration
@@ -449,7 +449,7 @@ else
 		'o_make_links'				=> 1,
 		'o_default_lang'			=> $default_lang,
 		'o_default_style'			=> $default_style,
-		'o_default_user_group'		=> 4,
+		'o_default_user_group'		=> $USER_GROUP,
 		'o_topic_review'			=> 15,
 		'o_disp_topics_default'		=> 30,
 		'o_disp_posts_default'		=> 25,
@@ -519,6 +519,9 @@ else
 
 	// Test content has been removed due to a preposterous number of hardcoded IDs
 	// Also, it always annoys me having to delete those as an admin anyway
+
+	// TODO: why is this needed? what is generating an empty cache before form submission?
+	generate_config_cache();
 
 	$db->end_transaction();
 
