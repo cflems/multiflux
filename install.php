@@ -594,7 +594,7 @@ else
 				'datatype'		=> 'TEXT',
 				'allow_null'	=> false
 			),
-			'group_id'			=> array(
+			'site_id'			=> array(
 				'datatype'		=> 'INT(255) UNSIGNED',
 				'allow_null'	=> false
 			),
