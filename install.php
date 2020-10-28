@@ -1,5 +1,5 @@
 <?php
-
+// TODO: change descriptive strings
 /**
  * Copyright (C) 2008-2012 FluxBB
  * based on code by Rickard Andersson copyright (C) 2002-2008 PunBB
@@ -227,38 +227,6 @@ function process_form(the_form)
 </div>
 
 <div id="brdmain">
-<?php if (count($languages) > 1): ?><div class="blockform">
-	<h2><span><?php echo $lang_install['Choose install language'] ?></span></h2>
-	<div class="box">
-		<form id="install" method="post" action="install.php">
-			<div class="inform">
-				<fieldset>
-					<legend><?php echo $lang_install['Install language'] ?></legend>
-					<div class="infldset">
-						<p><?php echo $lang_install['Choose install language info'] ?></p>
-						<label><strong><?php echo $lang_install['Install language'] ?></strong>
-						<br /><select name="install_lang">
-<?php
-
-		foreach ($languages as $temp)
-		{
-			if ($temp == $install_lang)
-				echo "\t\t\t\t\t".'<option value="'.$temp.'" selected="selected">'.$temp.'</option>'."\n";
-			else
-				echo "\t\t\t\t\t".'<option value="'.$temp.'">'.$temp.'</option>'."\n";
-		}
-
-?>
-						</select>
-						<br /></label>
-					</div>
-				</fieldset>
-			</div>
-			<p class="buttons"><input type="submit" name="start" value="<?php echo $lang_install['Change language'] ?>" /></p>
-		</form>
-	</div>
-</div>
-<?php endif; ?>
 
 <div class="blockform">
 	<h2><span><?php echo sprintf($lang_install['Install'], FORUM_VERSION) ?></span></h2>

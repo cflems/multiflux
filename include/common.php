@@ -114,10 +114,8 @@ require PUN_ROOT.'include/dblayer/common_db.php';
 // Start a transaction
 $db->start_transaction();
 
-// Determine SITE_ID from $_SERVER['HTTP_HOST']
-$result = $db->query('SELECT site_id FROM '.$db->prefix.'hostmap WHERE host = \''.$db->escape(strtolower($_SERVER['HTTP_HOST'])).'\'') or error('Unable to fetch site ID', __FILE__, __LINE__, $db->error());
-if (!$db->num_rows($result)) die('No forum was found at this address.'); // TODO: lang-ify
-else define('SITE_ID', $db->result($result));
+require PUN_ROOT.'include/site_id.php';
+set_siteid_from_hostname();
 
 // Load cached config
 if (file_exists(FORUM_CACHE_DIR.'cache_config_'.SITE_ID.'.php'))
