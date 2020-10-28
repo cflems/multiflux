@@ -33,6 +33,6 @@ $manage_tables = array(
 );
 
 foreach ($manage_tables as $tbl_name) {
-  $db->query('ALTER TABLE '.$db->prefix.$tbl_name.' ADD site_id INT(255) NOT NULL DEFAULT 0') or die(var_export($db->error(), true));
+  $db->query('ALTER TABLE '.$db->prefix.$tbl_name.' ADD site_id INT(255) UNSIGNED NOT NULL DEFAULT 0') or die(var_export($db->error(), true));
 }
 ?>
